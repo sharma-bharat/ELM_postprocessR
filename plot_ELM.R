@@ -1,6 +1,6 @@
 ##############################
 #
-# Open ELM/CLM R arrays and plot 
+# Open ELM/CLM lists of R arrays and plot 
 #
 # AWalker
 # April 2021
@@ -19,16 +19,36 @@ library(viridis)
 #######################################
 
 # paths
-wd_mod_out <- '/Volumes/disk2/Research_Projects/FATES/runs/tests/FACEconly_exptest/raw_output'
+wd_out       <- '/Volumes/disk2/Research_Projects/FATES/runs/tests/FACEconly_exptest/raw_output/FACEconly_exptest_processed'
+wd_out       <- '/Volumes/disk2/Research_Projects/FATES/runs/tests/FACEconly_exptest/raw_output/FACEconly_exptest_vcmax70_processed'
+# directory where to save output
+wd_out_plots <- NULL
 
 # filename variables
 caseidprefix <- 'FACEconly_exptest'
+caseidprefix <- 'FACEconly_exptest_vcmax70'
 sites        <- 'US-DUK'
 cases        <- c('spins', 'trans' )
 case_xlabs   <- c(spins='Spin-up', trans='Transient' )
 
 
 plotlist <- list(
+  p0.1 = list(
+    vvars = c('TBOT'),
+    ylab  = expression('Air Temperature ['^o*'C]')
+  ),
+  p0.2 = list(
+    vvars = c('RAIN'),
+    ylab  = expression('Rain [mm]')
+  ),
+  p0.3 = list(
+    vvars = c('FSDS'),
+    ylab  = expression('Incoming short-wave radiation ['*W*m^-2*']')
+  ),
+  p0.4 = list(
+    vvars = c('QBOT'),
+    ylab  = expression('Air specific huumidity ['*kg*kg^-1*']')
+  ),
   p0 = list(
     vvars = c('GPP','NPP','AR'),
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']'),
@@ -154,29 +174,6 @@ plotlist_phys <- list(
 # functions
 ############################3
 
-# this summarises an array and preserves names/labelling
-# - typically takes a single time dimension and summarises by a certain number of timesteps
-summarize_array <- function(a1, summarise_dim='time', summarise_ts=365, func=sum ) {
-  # summarize array
-  keep_dims <- (1:length(dim(a1)))[-which(names(dim(a1))==summarise_dim)] 
-  a2 <- apply(a1, keep_dims, function(v) apply(matrix(v,summarise_ts),2,func) )
-  
-  # update names(dim) and dimnames
-  dn <- dimnames(a2)
-  names(dim(a2)) <- names(dimnames(a2))
-  dimnames(a2)   <- dn
-  
-  # for pools and other variables that require a mean rather than sum
-  # ...
-  
-  # permute to original dim order
-  perm_dims <- match(names(dim(a1)), names(dim(a2)) )
-  a2 <- aperm(a2, perm_dims )
-  
-  a2
-}
-
-
 plot_3dim <- function(a3d=algtime, vvars=c('GPP','NPP','AR'), xdim='time', 
                       vcol=NULL, leg_cols=4, print2screen=T, ... ) {
   lv <- length(vvars)
@@ -198,7 +195,9 @@ plot_3dim <- function(a3d=algtime, vvars=c('GPP','NPP','AR'), xdim='time',
 }
 
 
-plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR'), subtract_vars=NULL, 
+plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR'), 
+                               product_vars=NULL, 
+                               subtract_vars=NULL, 
                                div_vars=NULL,
                                xdim='time', vcol=NULL, leg_cols=4, print2screen=T, ... ) {
   lv <- length(vvars) + !is.null(sum_vars) 
@@ -306,11 +305,16 @@ plot_figures <- function(plots, plotname='plots.pdf', nper_page=3 ) {
 #############################################
 # open RDS lists of arrays
 
-setwd(root)
+setwd(wd_out)
+if(is.null(wd_out_plots)) {
+  wd_out_plots <- wd_out
+} else if(!file.exists(wd_out_plots)) dir.create(wd_out_plots)
+
 
 c <- 2
 fname <- paste(caseidprefix,sites,cases[c],sep='_')
 l1    <- readRDS(paste0(fname,'.RDS')) 
+l2    <- readRDS(paste0(fname,'_annual.RDS')) 
 
 # extract data
 algtime   <- l1$data_arrays$`lndgrid,time`
@@ -321,18 +325,31 @@ dimnames(algtime)[[3]]
 dimnames(alglgtime)
 
 
-# summarize daily data to annual
-algtime_yearsum   <- summarize_array(algtime)
-alglgtime_yearsum <- summarize_array(alglgtime) # does not permute correctly
-dimnames(alglgtime_yearsum)
+# extract annual data
+algtime_annual   <- l2$data_arrays$`lndgrid,time`
+alglgtime_annual <- l2$data_arrays$`lndgrid,levgrnd,time`
+format(object.size(algtime_annual),units='Mb')
+format(object.size(alglgtime_annual),units='Mb')
+dimnames(algtime_annual)[[3]]
+dimnames(alglgtime_annual)
+
+names(l1)
+names(l2)
+
+lapply(l1$variables, function(l) l$units )[c('NPP_STEM','GPP')]
+lapply(l2$variables, function(l) l$units )[c('NPP_STEM','GPP')]
+
 
 
 # plot annual data
-plots <- make_figures(algtime_yearsum, plotlist=plotlist, xlab=case_xlabs[cases[c]], timestep='years' )
+plots <- make_figures(algtime_annual, plotlist=plotlist, xlab=case_xlabs[cases[c]], timestep='years' )
 plot_figures(plots, paste0(fname,'_annual','.pdf') )
 
 plots <- make_figures(algtime, alglgtime, plotlist=plotlist_phys, xlab=case_xlabs[cases[c]], timestep='days' )
 plot_figures(plots, paste0(fname,'_physiology','.pdf') )
+
+# plots <- make_figures(algtime, alglgtime, plotlist=c(plotlist_phys,plotlist['p1']), xlab=case_xlabs[cases[c]], timestep='days' )
+# plot_figures(plots, paste0(fname,'_physiology','.pdf') )
 
 
 # spin
@@ -343,8 +360,15 @@ l1    <- readRDS(paste0(fname,'.RDS'))
 # extract data
 algtime   <- l1$data_arrays$`lndgrid,time`
 alglgtime <- l1$data_arrays$`lndgrid,levgrnd,time`
+format(object.size(algtime),units='Mb')
+format(object.size(alglgtime),units='Mb')
 dimnames(alglgtime)
-l1$variables['H2OSOI']
+l1$variables['QBOT']
+l1$variables['RH2M']
+l1$variables['RH2M_R']
+
+grep( 'humidity', lapply(l1$variables, function(l) l$longname) , value=T )
+grep( 'kg/kg', lapply(l1$variables, function(l) l$units) , value=T )
 
 
 # plot annual data
@@ -359,6 +383,7 @@ grep('resistance', sapply(l1$variables, function(l) l$longname ), value=T )
 grep('conductance', sapply(l1$variables, function(l) l$longname ), value=T )
 l1$variables['C_LBLAYER']
 l1$variables['C_STOMATA']
+
 
 
 ### END ###
