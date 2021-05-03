@@ -1,0 +1,151 @@
+##############################
+#
+# Functions for plotting processed ELM/CLM netcdf files 
+#
+# AWalker
+# April 2021
+#
+##############################
+
+
+
+plot_3dim <- function(a3d=algtime, vvars=c('GPP','NPP','AR'), xdim='time', 
+                      vcol=NULL, leg_cols=4, print2screen=T, ... ) {
+  lv <- length(vvars)
+  lx <- dim(a3d)[xdim]
+  if(is.null(vcol)) vcol <- viridis(lv)
+  if(lv<leg_cols)   leg_cols <- lv
+  
+  p1 <- 
+    xyplot(a3d[,,vvars] ~ rep(1:lx,lv), groups=rep(vvars,each=lx),
+           type='l', 
+           scales=list(tck=c(-0.5,-0.5)),
+           par.settings=simpleTheme(col=vcol,lwd=2),# lwd=2, lty = 1:3 ), 
+           auto.key=list(lines=T, points=F, corner=c(0,1), x=0, y=1, 
+                         columns=leg_cols, border=T, cex=0.75, background='white' ),
+           ... )
+  
+  if(print2screen) print(p1)
+  p1
+}
+
+
+plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR'), 
+                               product_vars=NULL, 
+                               subtract_vars=NULL, 
+                               div_vars=NULL,
+                               xdim='time', vcol=NULL, leg_cols=4, print2screen=T, ... ) {
+  
+  lv <- length(vvars) + !is.null(sum_vars) 
+  lx <- dim(a3d)[xdim]
+  
+  # averaging / summing
+  asum    <- apply(a3d[,,sum_vars,drop=F], 2:1, sum )
+  nv_name <- paste0('sum(',paste(sum_vars,collapse=','),')')
+  if(!is.null(subtract_vars)) {
+    asub <- apply(a3d[,,subtract_vars,drop=F], 2:1, sum )
+    asum <- asum[drop=F] - asub[drop=F]
+    nv_name <- paste0(nv_name,' - sum(',paste(subtract_vars,collapse=','),')')
+  } else if(!is.null(div_sumvars)) {
+    adiv <- apply(a3d[,,div_sumvars,drop=F], 2:1, sum )
+    asum <- asum[drop=F] / adiv[drop=F]
+    nv_name <- paste0(nv_name,' / sum(',paste(div_sumvars,collapse=','),')')
+  } else if(!is.null(div_prodvars)) {
+    adiv <- apply(a3d[,,div_prodvars,drop=F], 2:1, sum )
+    asum <- asum[drop=F] / adiv[drop=F]
+    nv_name <- paste0(nv_name,' / sum(',paste(div_prodvars,collapse=','),')')
+  }
+  
+  
+  groups <- c(vvars, nv_name  )
+  if(is.null(vcol))           vcol <- viridis(length(groups))
+  if(length(groups)<leg_cols) leg_cols <- length(groups)
+  
+  a3d[,,'TRIMMING'] <- asum[,]
+  dimnames(a3d)[[3]][which(dimnames(a3d)[[3]]=='TRIMMING')] <- nv_name
+  
+  p1 <- 
+    xyplot(a3d[,,groups] ~ rep(1:lx,lv), groups=rep(groups,each=lx),
+           type='l', scales=list(tck=c(-0.5,-0.5)),
+           par.settings=simpleTheme(col=vcol,lwd=2),# lty = 1:3 ), 
+           auto.key=list(lines=T, points=F, corner=c(0,1), x=0, y=1,
+                         columns=leg_cols, border=T, cex=0.75, background='white' ),
+           ... )
+  
+  if(print2screen) print(p1)
+  p1
+}
+
+
+plot_4dim <- function(a4d=alglgtime, vvars=c('H2OSOI'), xdim='time', zdim='levgrnd', dim_sub=NULL,
+                      vcol=NULL, leg_cols=4, print2screen=T, ... ) {
+  lv <- length(vvars)
+  lx <- dim(a4d)[xdim]
+  lz <- if(is.null(dim_sub)) dim(a4d)[zdim] else length(dim_sub)
+  if(is.null(dim_sub)) dim_sub <- 1:lz
+  if(is.null(vcol)) vcol <- viridis(lz)
+  if(lz<leg_cols)   leg_cols <- lz
+  
+  p1 <- 
+    xyplot(a4d[,dim_sub,,vvars] ~ rep(1:lx,each=lz), groups=rep(paste(vvars,letters[dim_sub]),lx),
+           type='l', 
+           scales=list(tck=c(-0.5,-0.5)),
+           par.settings=simpleTheme(col=vcol,lwd=2),# lwd=2, lty = 1:3 ), 
+           auto.key=list(lines=T, points=F, corner=c(0,1), x=0, y=1, 
+                         columns=leg_cols, border=T, cex=0.75, background='white' ),
+           ... )
+  
+  if(print2screen) print(p1)
+  p1
+}
+
+
+make_figures <- function(a3d, a4d, plotlist, xlab='Spin-up', timestep='years', print2screen=F ) {
+  
+  lapply(plotlist, function(l) {
+    
+    print('',quote=F)
+    print('Making figure:',quote=F)
+    print(paste('vars:',l$vvars),quote=F)
+    combvars <- F
+    if(!is.null(l$sum_vars))      {print(paste('sum vars:',l$sum_vars),quote=F); combvars <- T }
+    if(!is.null(l$subtract_vars)) {print(paste('subtract vars:',l$subtractvars),quote=F); combvars <- T }
+    if(!is.null(l$div_sumvars))   {print(paste('divide summed vars:',l$div_sumvars),quote=F); combvars <- T }
+    if(!is.null(l$div_prodvars))  {print(paste('divide produce vars:',l$div_prodvars),quote=F); combvars <- T }
+    
+    if(is.null(l$v4d)) {
+      if(combvars) {
+        plot_3dim_combvars(a3d, sum_vars=l$sum_vars, subtract_vars=l$subtract_vars, div_vars=l$div_vars,
+                           vvars=l$vvars, ylab=l$ylab, xlab=paste(xlab,timestep), 
+                           print2screen=print2screen )
+      } else {
+        plot_3dim(a3d, vvars=l$vvars, ylab=l$ylab, xlab=paste(xlab,timestep), print2screen=print2screen )
+      }
+    } else {
+      if(!is.null(a4d)) {
+        plot_4dim(a4d, vvars=l$vvars, dim_sub=l$dim_sub, ylab=l$ylab, xlab=paste(xlab,timestep), print2screen=print2screen )
+      } else {
+        warning('a4d argument not given, no 4d plots.')
+      }
+    }
+  })
+}
+
+
+plot_figures <- function(plots, plotname='plots.pdf', nper_page=3 ) {
+  print('', quote=F )
+  print(paste('Saving figures to:',plotname), quote=F )
+  
+  pdf(plotname, width=8.5, height=11 )
+  lapply(1:length(plots), function(p) {
+    print(plots[p], 
+          split=c(1,p%%nper_page+if(p%%nper_page==0) nper_page else 0,1,nper_page), 
+          more=p%%nper_page )
+    numeric(0)
+  })
+  dev.off()
+}
+
+
+
+### END ###
