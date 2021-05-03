@@ -28,9 +28,11 @@ Please feel free to contribute by creating a newbranch that includes a username 
 netcdf4.0 libraries
 R packages: ncdf4 
 
-### Run simulations with MAAT ###
+### Run ###
 
-https://github.com/walkeranthonyp/MAAT/wiki/Run-MAAT-simulations
+Use Rscript to run `functions_processing.R` and once that has been run, to run `functions_plotting.R`.
+Look inside each script to see command line arguments and how they are to be specified.  
+ 
 
 
 ### Related publications ###
