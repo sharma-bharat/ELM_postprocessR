@@ -15,8 +15,9 @@ library(viridis)
 
 
 # variables not passsed from processing script
-wd_out_plots <- NULL
-case_xlabs   <- c(spins='Spin-up', trans='Transient' )
+wd_out_plots  <- NULL
+case_xlabs    <- c(spins='Spin-up', trans='Transient' )
+case_timestep <- c(spins='year', trans='day' )
 
 
 print('',quote=F);print('',quote=F);print('',quote=F)
@@ -99,15 +100,11 @@ plotlist <- list(
   ),
   p2 = list(
     vvars = c('ED_balive','ED_bdead','ED_bfineroot','ED_biomass','ED_bleaf','ED_bsapwood','ED_bstore'),
-    ylab  = expression('C Pool [gC '*m^-2*']'),
-    sum_vars = NULL,
-    subtract_vars = NULL
+    ylab  = expression('C Pool [gC '*m^-2*']')
   ),
   p3 = list(
-    vvars = c('RAIN','QRUNOFF','QDRAI','QVEGT','QVEGE'),
-    ylab  = expression('H2O Flux [kg '*H[2]*O*' '*m^-2*' timestep'^-1*']'),
-    sum_vars = NULL,
-    subtract_vars = NULL
+    vvars = c('RAIN','QRUNOFF','QDRAI','QVEGT','QVEGE','QSOIL'),
+    ylab  = expression('H2O Flux [kg '*H[2]*O*' '*m^-2*' timestep'^-1*']')
   ),
   p4 = list(
     vvars = c('SOILWATER_10CM'),
@@ -157,34 +154,53 @@ plotlist_phys <- list(
     vvars = c('QVEGT','QVEGE'),
     ylab  = expression('H2O Flux [kg '*H[2]*O*' '*m^-2*' timestep'^-1*']')
   ),
-  p1 = list(
-    vvars = c('BTRAN'),
-    ylab  = expression('Plant water status [0-1]; WUE [kg.'*g^-1*']'),
-    sum_vars = c('QVEGT'),
-    div_sumvars = c('GPP')
-  ),
-  p1.1 = list(
-    vvars = NULL,
-    ylab  = expression('iWUE GPP/'*g[c]*'['^-1*']'),
-    sum_vars = c('QVEGT'),
-    div_prodvars = c('C_STOMATA','TLAI')
-  ),
-  p1a = list(
-    vvars = c('C_STOMATA'),
-    ylab  = expression(g[s]*' ['*mu*mol*' '*m^-2*' s'^-1*']')
-  ),
-  p1b = list(
-    vvars = c('C_LBLAYER'),
-    ylab  = expression(g[b]*' ['*mu*mol*' '*m^-2*' s'^-1*']')
-  ),
   p2 = list(
     vvars = c('TLAI','TRIMMING'),
     ylab  = expression('LAI ['*m^2*m^-2*'], LAI trimming [0-1]'),
     sum_vars = NULL,
     subtract_vars = NULL
   ),
+  p1c = list(
+    vvars = NULL,
+    ylab  = expression('veg WUE [g.'*kg^-1*']'),
+    sum_vars = c('GPP'),
+    div_sumvars = c('QVEGT')
+  ),
+  p1d = list(
+    vvars = NULL,
+    ylab  = expression('ecosystem WUE [g.'*kg^-1*']'),
+    sum_vars = c('GPP'),
+    div_sumvars = c('QVEGT','QVEGE','QSOIL')
+  ),
+  p1.1 = list(
+    vvars = NULL,
+    ylab  = expression('iWUE GPP/'*g[c]*' ['*mu*mol*' '*mol^-1*']'),
+    sum_vars = list(
+      sum_vars=c('GPP'),
+      scale=1e12/(86400*12)
+      ),
+    div_prodvars = c('C_STOMATA','TLAI')
+  ),
+  p1a = list(
+    vvars = c('C_STOMATA'),
+    sum_vars='GPP',
+    product_vars=c('C_STOMATA','TLAI'),
+    ylab  = expression(g['s,c']*' ['*mu*mol*' '*m^-2*' s'^-1*']')
+  ),
+  # p1a = list(
+  #   vvars = c('C_STOMATA'),
+  #   ylab  = expression(g[s]*' ['*mu*mol*' '*m^-2*' s'^-1*']')
+  # ),
+  p1b = list(
+    vvars = c('C_LBLAYER'),
+    ylab  = expression(g[b]*' ['*mu*mol*' '*m^-2*' s'^-1*']')
+  ),
+  p1 = list(
+    vvars = c('BTRAN'),
+    ylab  = expression('Plant water status [0-1]')
+  ),
   p3 = list(
-    vvars = c('RAIN','QVEGT','QVEGE'),
+    vvars = c('RAIN','QVEGT','QVEGE','QSOIL'),
     ylab  = expression('H2O Flux [kg '*H[2]*O*' '*m^-2*' timestep'^-1*']'),
     sum_vars = c('QRUNOFF','QDRAI'),
     subtract_vars = NULL
@@ -230,10 +246,10 @@ for(c in 1:length(case_labs)) {
   alglgtime <- l1$data_arrays$`lndgrid,levgrnd,time`
   
   # plot required figures
-  plots <- make_figures(algtime, plotlist=plotlist, xlab=case_xlabs[case_labs[c]], timestep='years' )
+  plots <- make_figures(algtime, plotlist=plotlist, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
   plot_figures(plots, paste0(fname,'.pdf') )
   
-  plots <- make_figures(algtime, alglgtime, plotlist=plotlist_phys, xlab=case_xlabs[case_labs[c]], timestep='days' )
+  plots <- make_figures(algtime, alglgtime, plotlist=plotlist_phys, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
   plot_figures(plots, paste0(fname,'_physiology','.pdf') )
   
   
@@ -244,7 +260,7 @@ for(c in 1:length(case_labs)) {
     algtime_annual   <- l2$data_arrays$`lndgrid,time`
     alglgtime_annual <- l2$data_arrays$`lndgrid,levgrnd,time`
     
-    plots <- make_figures(algtime_annual, plotlist=plotlist, xlab=case_xlabs[case_labs[c]], timestep='years' )
+    plots <- make_figures(algtime_annual, plotlist=plotlist, xlab=case_xlabs[case_labs[c]], timestep='year' )
     plot_figures(plots, paste0(fname,'_annual','.pdf') )
   }
 }

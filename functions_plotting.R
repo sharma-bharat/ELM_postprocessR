@@ -33,15 +33,24 @@ plot_3dim <- function(a3d=algtime, vvars=c('GPP','NPP','AR'), xdim='time',
 plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR'), 
                                product_vars=NULL, 
                                subtract_vars=NULL, 
-                               div_vars=NULL,
-                               xdim='time', vcol=NULL, leg_cols=4, print2screen=T, ... ) {
+                               div_sumvars=NULL,
+                               div_prodvars=NULL,
+                               xdim='time', vcol=NULL, leg_cols=4, print2screen=T,
+                               days=1, ... ) {
   
   lv <- length(vvars) + !is.null(sum_vars) 
   lx <- dim(a3d)[xdim]
   
   # averaging / summing
-  asum    <- apply(a3d[,,sum_vars,drop=F], 2:1, sum )
+  sum_vars.scale <- 1
+  if(is.list(sum_vars)) {sum_vars.scale <- sum_vars$scale*1/days; sum_vars <- sum_vars$sum_vars }
+
+  asum    <- apply(a3d[,,sum_vars,drop=F]*sum_vars.scale, 2:1, sum )
   nv_name <- paste0('sum(',paste(sum_vars,collapse=','),')')
+  if(!is.null(product_vars)) {
+    asum <- apply(a3d[,,product_vars,drop=F], 2:1, prod )
+    nv_name <- paste0('prod(',paste(product_vars,collapse=','),')')
+  }  
   if(!is.null(subtract_vars)) {
     asub <- apply(a3d[,,subtract_vars,drop=F], 2:1, sum )
     asum <- asum[drop=F] - asub[drop=F]
@@ -53,7 +62,7 @@ plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR
   } else if(!is.null(div_prodvars)) {
     adiv <- apply(a3d[,,div_prodvars,drop=F], 2:1, sum )
     asum <- asum[drop=F] / adiv[drop=F]
-    nv_name <- paste0(nv_name,' / sum(',paste(div_prodvars,collapse=','),')')
+    nv_name <- paste0(nv_name,' / prod(',paste(div_prodvars,collapse=','),')')
   }
   
   
@@ -100,30 +109,38 @@ plot_4dim <- function(a4d=alglgtime, vvars=c('H2OSOI'), xdim='time', zdim='levgr
 }
 
 
-make_figures <- function(a3d, a4d, plotlist, xlab='Spin-up', timestep='years', print2screen=F ) {
+make_figures <- function(a3d, a4d, plotlist, xlab='Spin-up', timestep='year', print2screen=F ) {
   
   lapply(plotlist, function(l) {
     
     print('',quote=F)
     print('Making figure:',quote=F)
-    print(paste('vars:',l$vvars),quote=F)
+    print(paste('vars:',paste(l$vvars,collapse=',')),quote=F)
     combvars <- F
-    if(!is.null(l$sum_vars))      {print(paste('sum vars:',l$sum_vars),quote=F); combvars <- T }
-    if(!is.null(l$subtract_vars)) {print(paste('subtract vars:',l$subtractvars),quote=F); combvars <- T }
-    if(!is.null(l$div_sumvars))   {print(paste('divide summed vars:',l$div_sumvars),quote=F); combvars <- T }
-    if(!is.null(l$div_prodvars))  {print(paste('divide produce vars:',l$div_prodvars),quote=F); combvars <- T }
+    if(!is.null(l$sum_vars))      {print(paste('sum vars:',paste(l$sum_vars,collapse='+')),quote=F); combvars <- T }
+    if(!is.null(l$subtract_vars)) {print(paste('subtract vars:',paste(l$subtract_vars,collapse='+')),quote=F); combvars <- T }
+    if(!is.null(l$div_sumvars))   {print(paste('divide vars:',paste(l$div_sumvars,collapse='+')),quote=F); combvars <- T }
+    if(!is.null(l$div_prodvars))  {print(paste('divide vars:',paste(l$div_prodvars,collapse='*')),quote=F); combvars <- T }
+    
+    days <- 1
+    if(timestep=='year') {
+      days <- 365
+    }
     
     if(is.null(l$v4d)) {
       if(combvars) {
-        plot_3dim_combvars(a3d, sum_vars=l$sum_vars, subtract_vars=l$subtract_vars, div_vars=l$div_vars,
+        plot_3dim_combvars(a3d, sum_vars=l$sum_vars, product_vars=l$product_vars, 
+                           subtract_vars=l$subtract_vars, 
+                           div_sumvars=l$div_sumvars, div_prodvars=l$div_prodvars,
                            vvars=l$vvars, ylab=l$ylab, xlab=paste(xlab,timestep), 
-                           print2screen=print2screen )
+                           print2screen=print2screen, days=days )
       } else {
-        plot_3dim(a3d, vvars=l$vvars, ylab=l$ylab, xlab=paste(xlab,timestep), print2screen=print2screen )
+        plot_3dim(a3d, vvars=l$vvars, ylab=l$ylab, xlab=paste(xlab,timestep), print2screen=print2screen, days=days )
       }
     } else {
       if(!is.null(a4d)) {
-        plot_4dim(a4d, vvars=l$vvars, dim_sub=l$dim_sub, ylab=l$ylab, xlab=paste(xlab,timestep), print2screen=print2screen )
+        plot_4dim(a4d, vvars=l$vvars, dim_sub=l$dim_sub, ylab=l$ylab, xlab=paste(xlab,timestep), 
+                  print2screen=print2screen, days=days )
       } else {
         warning('a4d argument not given, no 4d plots.')
       }
