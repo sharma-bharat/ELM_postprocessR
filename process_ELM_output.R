@@ -118,19 +118,15 @@ print('',quote=F)
 
 
 # separate spins from transient
-if(sep_spin | length(unique(tsteps))!=1) {
-  spinss <- which(grepl('1850', cases ))
-  cases  <- breakout_cases(cases, spinss, case_labs ) 
-  syear  <- breakout_cases(syear, spinss, case_labs ) 
-  years  <- breakout_cases(years, spinss, case_labs ) 
-  tsteps <- breakout_cases(tsteps, spinss, case_labs ) 
-}
+spinss <- grepl('1850', cases )
+cases  <- breakout_cases(cases, spinss, case_labs ) 
+syear  <- breakout_cases(syear, spinss, case_labs ) 
+years  <- breakout_cases(years, spinss, case_labs ) 
+tsteps <- breakout_cases(tsteps, spinss, case_labs ) 
 
 
 # cases loop
-c <- 1
 for(c in 1:length(cases)) {
-# for(c in 2 ) {
   setwd(wd_mod_out)
   
   cases_current   <- cases[[c]] 

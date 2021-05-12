@@ -71,10 +71,14 @@ time_conv <- list(
 
 
 breakout_cases <- function(v, spinss, case_labs ) {
-  l <- list(
-    v[spinss],
-    v[-spinss]
-  )
+  if(any(spinss)) {
+    l <- list(
+      v[spinss],
+      v[!spinss]
+    ) 
+  } else {
+    l <- list(v) 
+  }
   names(l) <- case_labs
   l
 } 

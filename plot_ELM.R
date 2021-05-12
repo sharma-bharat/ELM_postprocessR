@@ -16,8 +16,8 @@ library(viridis)
 
 # variables not passsed from processing script
 wd_out_plots  <- NULL
-case_xlabs    <- c(spins='Spin-up', trans='Transient' )
-case_timestep <- c(spins='year', trans='day' )
+case_xlabs    <- c(spins='Spin-up', trans='Transient', aCO2='Ambient CO2', eCO2='Elevated CO2' )
+case_timestep <- c(spins='year', trans='day', aCO2='day', eCO2='day' )
 
 
 print('',quote=F);print('',quote=F);print('',quote=F)
