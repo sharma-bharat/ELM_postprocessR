@@ -35,6 +35,7 @@ plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR
                                subtract_vars=NULL, 
                                div_sumvars=NULL,
                                div_prodvars=NULL,
+                               div_zero=1e-2,
                                xdim='time', vcol=NULL, leg_cols=4, print2screen=T,
                                days=1, ... ) {
   
@@ -57,10 +58,12 @@ plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR
     nv_name <- paste0(nv_name,' - sum(',paste(subtract_vars,collapse=','),')')
   } else if(!is.null(div_sumvars)) {
     adiv <- apply(a3d[,,div_sumvars,drop=F], 2:1, sum )
+    adiv[adiv<div_zero] <- NA
     asum <- asum[drop=F] / adiv[drop=F]
     nv_name <- paste0(nv_name,' / sum(',paste(div_sumvars,collapse=','),')')
   } else if(!is.null(div_prodvars)) {
-    adiv <- apply(a3d[,,div_prodvars,drop=F], 2:1, sum )
+    adiv <- apply(a3d[,,div_prodvars,drop=F], 2:1, prod )
+    adiv[adiv<div_zero] <- NA
     asum <- asum[drop=F] / adiv[drop=F]
     nv_name <- paste0(nv_name,' / prod(',paste(div_prodvars,collapse=','),')')
   }
@@ -69,9 +72,10 @@ plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR
   groups <- c(vvars, nv_name  )
   if(is.null(vcol))           vcol <- viridis(length(groups))
   if(length(groups)<leg_cols) leg_cols <- length(groups)
-  
-  a3d[,,'TRIMMING'] <- asum[,]
-  dimnames(a3d)[[3]][which(dimnames(a3d)[[3]]=='TRIMMING')] <- nv_name
+
+  dummy_var <- if(!('TRIMMING'%in%vvars)) 'TRIMMING' else 'NPP_CROOT'  
+  a3d[,,dummy_var] <- asum[,]
+  dimnames(a3d)[[3]][which(dimnames(a3d)[[3]]==dummy_var)] <- nv_name
   
   p1 <- 
     xyplot(a3d[,,groups] ~ rep(1:lx,lv), groups=rep(groups,each=lx),

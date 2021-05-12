@@ -68,7 +68,7 @@ source('functions_plotting.R')
 
 
 # plotting lists
-# - each element in these plotlist lists resultdescribe a separate figure when passed to the make_figures function 
+# - each element in these plotlist lists result describe a separate figure when passed to the make_figures function 
 plotlist <- list(
   p0.1 = list(
     vvars = c('TBOT'),
@@ -88,15 +88,11 @@ plotlist <- list(
   ),
   p0 = list(
     vvars = c('GPP','NPP','AR'),
-    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']'),
-    sum_vars = NULL,
-    subtract_vars = NULL
+    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
   p1 = list(
     vvars = c('NPP_CROOT','NPP_FROOT','NPP_LEAF','NPP_SEED','NPP_STEM','NPP_STOR'),
-    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']'),
-    sum_vars = NULL,
-    subtract_vars = NULL
+    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
   p2 = list(
     vvars = c('ED_balive','ED_bdead','ED_bfineroot','ED_biomass','ED_bleaf','ED_bsapwood','ED_bstore'),
@@ -108,40 +104,28 @@ plotlist <- list(
   ),
   p4 = list(
     vvars = c('SOILWATER_10CM'),
-    ylab  = 'Soil Water Content [%]',
-    sum_vars = NULL,
-    subtract_vars = NULL
+    ylab  = 'Soil Water Content [%]'
   ),
   p5 = list(
     vvars = c('BTRAN'),
-    ylab  = 'Plant water status [0-1]',
-    sum_vars = NULL,
-    subtract_vars = NULL
+    ylab  = 'Plant water status [0-1]'
   ),
   p6 = list(
-    vvars = c('TLAI','TRIMMING'),
-    ylab  = expression('LAI ['*m^2*m^-2*'], LAI trimming [0-1]'),
-    sum_vars = NULL,
-    subtract_vars = NULL
+    vvars = c('TLAI'),
+    ylab  = expression('LAI ['*m^2*m^-2*']')
   ),
   p7 = list(
     vvars = c('DEMOTION_CARBONFLUX','MORTALITY_CARBONFLUX_CANOPY','MORTALITY_CARBONFLUX_UNDERSTORY'),
-    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']'),
-    sum_vars = NULL,
-    subtract_vars = NULL
+    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
   p8 = list(
     vvars = c('DISTURBANCE_RATE_FIRE','DISTURBANCE_RATE_LOGGING','DISTURBANCE_RATE_P2P','DISTURBANCE_RATE_P2S',
               'DISTURBANCE_RATE_POTENTIAL','DISTURBANCE_RATE_S2S','DISTURBANCE_RATE_TREEFALL'),
-    ylab  = 'Fraction of ground area disturbed [0-1]',  
-    sum_vars = NULL,
-    subtract_vars = NULL
+    ylab  = 'Fraction of ground area disturbed [0-1]'  
   ),
   p9 = list(
     vvars = c('ED_NCOHORTS','ED_NPATCHES'),
-    ylab  = 'FATES diagnostics [#]',
-    sum_vars = NULL,
-    subtract_vars = NULL
+    ylab  = 'FATES diagnostics [#]'
   )
 )
 
@@ -156,9 +140,9 @@ plotlist_phys <- list(
   ),
   p2 = list(
     vvars = c('TLAI','TRIMMING'),
-    ylab  = expression('LAI ['*m^2*m^-2*'], LAI trimming [0-1]'),
-    sum_vars = NULL,
-    subtract_vars = NULL
+    sum_vars='TLAI',
+    div_sumvars='TRIMMING',
+    ylab  = expression('LAI ['*m^2*m^-2*'], LAI trimming [0-1]')
   ),
   p1c = list(
     vvars = NULL,
@@ -174,10 +158,10 @@ plotlist_phys <- list(
   ),
   p1.1 = list(
     vvars = NULL,
-    ylab  = expression('iWUE GPP/'*g[c]*' ['*mu*mol*' '*mol^-1*']'),
+    ylab  = expression('iWUE GPP/'*g[c]*' ['*mu*mol*' C '*mol^-1*' '*H[2]*O*']'),
     sum_vars = list(
       sum_vars=c('GPP'),
-      scale=1e12/(86400*12)
+      scale=1e12/(86400*12) # convert g C umol-1 H2O to umol C mol-1 H2O
       ),
     div_prodvars = c('C_STOMATA','TLAI')
   ),
@@ -185,15 +169,11 @@ plotlist_phys <- list(
     vvars = c('C_STOMATA'),
     sum_vars='GPP',
     product_vars=c('C_STOMATA','TLAI'),
-    ylab  = expression(g['s,c']*' ['*mu*mol*' '*m^-2*' s'^-1*']')
+    ylab  = expression(g['s,c']*' ['*mu*mol*' '*H[2]*O*' '*m^-2*' s'^-1*']')
   ),
-  # p1a = list(
-  #   vvars = c('C_STOMATA'),
-  #   ylab  = expression(g[s]*' ['*mu*mol*' '*m^-2*' s'^-1*']')
-  # ),
   p1b = list(
     vvars = c('C_LBLAYER'),
-    ylab  = expression(g[b]*' ['*mu*mol*' '*m^-2*' s'^-1*']')
+    ylab  = expression(g['s,c']*' ['*mu*mol*' '*H[2]*O*' '*m^-2*' s'^-1*']')
   ),
   p1 = list(
     vvars = c('BTRAN'),
