@@ -58,6 +58,14 @@ time_conv <- list(
   `gC/m2/s` = list(
     func = conv_psecond_to_pts,
     newunits = 'gC/m2/timestep'
+  ),
+  `gN/m2/s` = list(
+    func = conv_psecond_to_pts,
+    newunits = 'gN/m2/timestep'
+  ),
+  `gP/m2/s` = list(
+    func = conv_psecond_to_pts,
+    newunits = 'gP/m2/timestep'
   ), 
   `mm/s` = list(
     func = conv_psecond_to_pts,
