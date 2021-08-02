@@ -42,9 +42,11 @@ wd_out     <- NULL
 caseidprefix    <- 'FACEconly_exptest'
 sites           <- 'US-DUK'
 cases           <- c('I1850CLM45ED_ad_spinup', 'I1850CLM45ED', 'I20TRCLM45ED' )
+cases           <- c('I1850ELMFATES_ad_spinup', 'I1850ELMFATES', 'I20TRELMFATES' )
 case_labs       <- c('spins', 'trans' )
 # model name in output files
 mod             <- 'clm2'
+mod             <- 'elm'
 # start date and time of output files
 # - currently only this one is supported, anything other then output files covering integer years requires development 
 fstart_datetime <- '-01-01-00000'
@@ -76,6 +78,7 @@ to_annual <- T    # where tsteps > 1 also produce an annual RDS file
 varconv   <- T    # covert variables using functions in var_conv list
 timeconv  <- T    # covert variables using functions in time_conv list, only implemented if varconv also TRUE (necessary?) 
 call_plot <- T    # call plotting script  
+plot_only <- F    # only call plotting script, do not process data 
 
 
 ##################################
@@ -126,6 +129,7 @@ tsteps <- breakout_cases(tsteps, spinss, case_labs )
 
 
 # cases loop
+if(!plot_only) {
 for(c in 1:length(cases)) {
   setwd(wd_mod_out)
   
@@ -281,6 +285,7 @@ for(c in 1:length(cases)) {
   # close/write nc file
   nc_close(newnc)
   # zip nc file
+  setwd(wd_out)
   if(zip) system(paste('gzip ', paste0(new_fname,'.nc') ))
 
     
@@ -349,8 +354,8 @@ for(c in 1:length(cases)) {
   }
   print('done.',quote=F)
   
-  # cases loop  
-}
+  # cases loop & plot only if  
+}}
 
 
 if(call_plot) {

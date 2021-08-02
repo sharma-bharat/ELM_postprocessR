@@ -26,10 +26,13 @@ conv_sh_to_rh <- function(q, t, p=101325 ) {
   paw/paws * 1000      # units for SDGVM 0.1 % or parts per mil
 }
 
-conv_K_to_oC          <- function(v,...) (v - 273.15)                              # converts K to oC
-conv_kgpyear_to_gpsec <- function(v,...)  v * 1e3 / (3600*24*365)                  # kg yr-1 to g s-1   
-conv_psecond_to_pts   <- function(v,tsteps_in_yr,...) v * 3600*24*365/tsteps_in_yr # per second units to the timestep of the data     
-conv_pday_to_pts      <- function(v,tsteps_in_yr,...) v * 365/tsteps_in_yr         # per second units to the timestep of the data     
+change_unit_label        <- function(v,...)  v                                        # no conversion, just change label
+conv_K_to_oC             <- function(v,...) (v - 273.15)                              # converts K to oC
+conv_kgpha_to_gpm2       <- function(v,...)  v * 1e-1                                 # kg ha-1 to g m-2   
+conv_kgphapd_to_gpm2psec <- function(v,...)  v * 1e-1 / (3600*24)                     # kg ha-1 d-1 to g m-2 s-1   
+conv_kgpyear_to_gpsec    <- function(v,...)  v * 1e3 / (3600*24*365)                  # kg yr-1 to g s-1   
+conv_psecond_to_pts      <- function(v,tsteps_in_yr,...) v * 3600*24*365/tsteps_in_yr # per second units to the timestep of the data     
+conv_pday_to_pts         <- function(v,tsteps_in_yr,...) v * 365/tsteps_in_yr         # per second units to the timestep of the data     
 
 
 # unit conversion functions and new units
@@ -44,6 +47,42 @@ var_conv <- list(
   `kgC/m2/yr` = list(
     func = conv_kgpyear_to_gpsec,
     newunits = 'gC/m2/s'
+  ),
+  `kgC ha-1` = list(
+    func = conv_kgpha_to_gpm2,
+    newunits = 'gC/m2'
+  ),
+  `kgN ha-1` = list(
+    func = conv_kgpha_to_gpm2,
+    newunits = 'gN/m2'
+  ),
+  `kgP ha-1` = list(
+    func = conv_kgpha_to_gpm2,
+    newunits = 'gP/m2'
+  ),
+  `kgN ha-1 d-1` = list(
+    func = conv_kgphapd_to_gpm2psec,
+    newunits = 'gN/m2/s'
+  ),
+  `kgN d-1 ha-1` = list(
+    func = conv_kgphapd_to_gpm2psec,
+    newunits = 'gN/m2/s'
+  ),
+  `kgP ha-1 d-1` = list(
+    func = conv_kgphapd_to_gpm2psec,
+    newunits = 'gP/m2/s'
+  ),
+  `kgP d-1 ha-1` = list(
+    func = conv_kgphapd_to_gpm2psec,
+    newunits = 'gP/m2/s'
+  ),
+  `gN/m^2/s` = list(
+    func = change_unit_label, 
+    newunits = 'gP/m2/s'
+  ),
+  `gP/m^2/s` = list(
+    func = change_unit_label, 
+    newunits = 'gP/m2/s'
   )
 )
 

@@ -36,8 +36,12 @@ plotlist <- list(
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
   p2 = list(
-    vvars = c('ED_balive','ED_bdead','ED_bfineroot','ED_biomass','ED_bleaf','ED_bsapwood','ED_bstore','SOILC'),
-    ylab  = expression('C Pool [gC '*m^-2*']')
+    vvars = c('ED_balive','ED_bdead','ED_bfineroot','ED_biomass','ED_bleaf','ED_bsapwood','ED_bstore'),
+    ylab  = expression('Veg C Pool [gC '*m^-2*']')
+  ),
+  p2.1 = list(
+    vvars = c('SOILC'),
+    ylab  = expression('Soil C Pool [gC '*m^-2*']')
   ),
   p3 = list(
     vvars = c('RAIN','QRUNOFF','QDRAI','QVEGT','QVEGE','QSOIL'),
@@ -85,7 +89,8 @@ plotlist_nutrients <- list(
     ylab  = expression('P Pool [gP '*m^-2*']')
   ),
   p4 = list(
-    vvars = c('NUPTAKE','NNEED','NEFFLUX'),
+    #vvars = c('NUPTAKE','NNEED','NEFFLUX'),
+    vvars = c('NO3UPTAKE','NH4UPTAKE','NNEED','NEFFLUX'),
     ylab  = expression('N Flux [gN '*m^-2*' timestep'^-1*']')
   ),
   p5 = list(
@@ -103,6 +108,10 @@ plotlist_nutrients <- list(
   px = list(
     vvars = c('ED_bstore','STOREN','STOREP'),
     ylab  = expression('C/N/P Store [g '*m^-2*']')
+  ),
+  px.1 = list(
+    vvars = c('STOREN','STOREP'),
+    ylab  = expression('N/P Store [g '*m^-2*']')
   )
 )
 
