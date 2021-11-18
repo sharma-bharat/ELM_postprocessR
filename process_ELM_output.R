@@ -34,9 +34,10 @@ library(ncdf4)
 
 # paths
 # directory where model run directories live
-wd_mod_out <- '/Volumes/disk2/Research_Projects/FATES/runs/tests/FACEconly_exptest/raw_output'
+wd_mod_out      <- '/Volumes/disk2/Research_Projects/FATES/runs/tests/FACEconly_exptest/raw_output'
 # directory where to save output
-wd_out     <- NULL
+wd_out          <- NULL
+
 
 # filename etc variables
 caseidprefix    <- 'FACEconly_exptest'
@@ -45,40 +46,46 @@ cases           <- c('I1850CLM45ED_ad_spinup', 'I1850CLM45ED', 'I20TRCLM45ED' )
 cases           <- c('I1850ELMFATES_ad_spinup', 'I1850ELMFATES', 'I20TRELMFATES' )
 case_labs       <- c('spins', 'trans' )
 # model name in output files
-mod             <- 'clm2'
 mod             <- 'elm'
 # start date and time of output files
 # - currently only this one is supported, anything other then output files covering integer years requires development 
 fstart_datetime <- '-01-01-00000'
 # netcdf dimensions that contain character variables, can be a vector
 char_dims       <- 'string_length'
-
+# the number of members in a UQ ensemble, NULL means no ensemble 
+uq_ensemblen    <- NULL
 
 # time variables 
 # - syear, years, & tsteps vectors are the same extent as cases and elements correspond
 # APW: syear & years may vary by site but currently not supported
 # start year of each case
-syear     <- c(1, 1, 1850 )
+syear           <- c(1, 1, 1850 )
 # number of years of each case
-years     <- c(60, 60, 145 )
+years           <- c(60, 60, 145 )
 # output timesteps per year of each case
-tsteps    <- c(1, 1, 365 ) 
+tsteps          <- c(1, 1, 365 ) 
 # number for history file
-hist      <- 0
-days_in_m <- c(31,28,31,30,31,30,31,31,30,31,30,31)
-time_vars <- c('mcdate', 'mcsec', 'mdcur', 'mscur', 'nstep', 
-               'time_bounds', 'date_written', 'time_written' )
+hist            <- 0
+days_in_m       <- c(31,28,31,30,31,30,31,31,30,31,30,31)
+time_vars       <- c('mcdate', 'mcsec', 'mdcur', 'mscur', 'nstep', 
+                     'time_bounds', 'date_written', 'time_written' )
+# start date and time of output files
+# - currently only this one is supported, anything other then output files covering integer years requires development 
+fstart_datetime <- '-01-01-00000'
+# number of years in each output file
+fout_nyears     <- 1
+
 
 # switches
-sep_spin  <- T    # separate spin cases from transient ones, done automatically if tsteps are different
-zip       <- F    # zip concatenated netcdf
-vsub      <- NULL # subscripts (or a character vector) to put only those variables into new netcdf and RDS files
-yrzero    <- F    # ignore first year for spinups, currently automatic needs dev 
-to_annual <- T    # where tsteps > 1 also produce an annual RDS file  
-varconv   <- T    # covert variables using functions in var_conv list
-timeconv  <- T    # covert variables using functions in time_conv list, only implemented if varconv also TRUE (necessary?) 
-call_plot <- T    # call plotting script  
-plot_only <- F    # only call plotting script, do not process data 
+sep_spin        <- T    # separate spin cases from transient ones, done automatically if tsteps are different
+zip             <- F    # zip concatenated netcdf
+vsub            <- NULL # subscripts (or a character vector) to put only those variables into new netcdf and RDS files
+yrzero          <- F    # ignore first year for spinups, currently automatic needs dev 
+to_annual       <- T    # where tsteps > 1 also produce an annual RDS file  
+varconv         <- T    # covert variables using functions in var_conv list
+timeconv        <- T    # covert variables using functions in time_conv list, only implemented if varconv also TRUE (necessary?) 
+call_plot       <- T    # call plotting script  
+plot_only       <- F    # only call plotting script, do not process data 
 
 
 ##################################
@@ -146,6 +153,7 @@ for(c in 1:length(cases)) {
   print(sims,quote=F)
   
   s <- 1
+  # simulations loop
   for(s in 1:length(sims)) {
     setwd(paste(wd_mod_out,sims[s],'run',sep='/'))
 
@@ -164,7 +172,8 @@ for(c in 1:length(cases)) {
       vdims_len  <- lapply(ncdf1$var, function(l) sapply(l$dim, function(l) l$len ) )
       vars_units <- lapply(ncdf1$var, function(l) l$units )
       
-      # redefine existing dimensions 
+      # redefine existing dimensions
+      # - to include all output timesteps 
       newvars <-
         lapply(ncdf1$var, 
                function(var) {
@@ -173,7 +182,9 @@ for(c in 1:length(cases)) {
                  var
                })
       nc_close(ncdf1)
-      
+      # - add dimension for ensemble members (OLMT UQ run) 
+
+
       # subset variables
       if(!is.null(vsub)) newvars <- newvars[vsub]
       vnames <- names(newvars)
@@ -194,19 +205,44 @@ for(c in 1:length(cases)) {
                             len      = sapply(l$dim, function(l) l$len ),
                             units    = l$units
                           ))
+      
+      # list of dimension variables
+      dimvars_list <- lapply(ncdf1$dim, 
+                             function(l) {
+                               if(l$dimvarid$id[1] > 0) {
+                                 list(
+                                   name     = l$name,
+                                   vals     = l$vals,
+                                   len      = l$len,
+                                   units    = l$units
+                                 )
+                               } else NULL
+                             })
+      
       print('done.',quote=F)
     }
     
     
     # join files along redefined dimensions
+    ##############################################
+
+    # output file years
+    # - if not every year ELM/FATES will miss the final years of ouput if years_current does not divide exactly by fout_nyears 
     if(names(years)[c]=='spins') {
+      # the + 1 here means yr 1 is not read as for a spin that shows the initialisation values
       year_range <- syear_current[s]:years_current[s] + 1
+      #year_range <- seq(syear_current[s], years_current[s], fout_nyears )
       timecount_augment <- tcaug
     } else {
       year_range <- syear_current[s]:(syear_current[s] + years_current[s] - 1)
+      #year_range <- seq(syear_current[s], (syear_current[s] + years_current[s] - 1), fout_nyears )
       timecount_augment <- 0
     }
-    
+   
+
+    # add an ensemble loop - recommend reduced number of output variables 
+
+    # output file loop 
     # can multicore this loop but requires OOP or other method
     print('',quote=F)
     print('Reading data and adding to new netcdf file ... ',quote=F)
@@ -346,10 +382,15 @@ for(c in 1:length(cases)) {
   print('Writing RDS file(s) ... ',quote=F)
   
   setwd(wd_out)
-  l1 <- list(dimensions=dlen, dim_combinations=dc_nvars, variables=vars_list, data_arrays=al )
+  l1 <- list(dimensions=dlen, dim_combinations=dc_nvars, 
+             variables=vars_list, dim_variables=dimvars_list, 
+             data_arrays=al )
   saveRDS(l1, paste0(new_fname,'.RDS') )
+  
   if(!is.null(ald)) {
-    l1 <- list(dimensions=dlen, dim_combinations=dc_nvars, variables=vars_list, data_arrays=ald )
+    l1 <- list(dimensions=dlen, dim_combinations=dc_nvars, 
+               variables=vars_list, dim_variables=dimvars_list, 
+               data_arrays=ald )
     saveRDS(l1, paste0(new_fname,'_annual.RDS') )
   }
   print('done.',quote=F)
