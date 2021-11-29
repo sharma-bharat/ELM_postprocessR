@@ -42,9 +42,11 @@ wd_out          <- NULL
 # filename etc variables
 caseidprefix    <- 'FACEconly_exptest'
 sites           <- 'US-DUK'
-cases           <- c('I1850CLM45ED_ad_spinup', 'I1850CLM45ED', 'I20TRCLM45ED' )
+#cases           <- c('I1850CLM45ED_ad_spinup', 'I1850CLM45ED', 'I20TRCLM45ED' )
 cases           <- c('I1850ELMFATES_ad_spinup', 'I1850ELMFATES', 'I20TRELMFATES' )
 case_labs       <- c('spins', 'trans' )
+# either NULL or an integer number of ensemble members 
+uq              <- NULL
 # model name in output files
 mod             <- 'elm'
 # start date and time of output files
@@ -85,7 +87,11 @@ to_annual       <- T    # where tsteps > 1 also produce an annual RDS file
 varconv         <- T    # covert variables using functions in var_conv list
 timeconv        <- T    # covert variables using functions in time_conv list, only implemented if varconv also TRUE (necessary?) 
 call_plot       <- T    # call plotting script  
-plot_only       <- F    # only call plotting script, do not process data 
+plot_only       <- F    # only call plotting or concatenation script if their switches are true, do not process data 
+concatenate_caseid <- F # concatenate RDS files for all runs in caseidprefix vector
+concatenate_uq     <- F # concatenate RDS files for all runs in a UQ ensemble 
+concatenate_daily  <- F # concatenate only RDS annual files 
+
 
 
 ##################################
@@ -115,18 +121,6 @@ print('',quote=F)
 print('Processing cases in model output directory:',quote=F)
 print(wd_mod_out,quote=F)
 
-if(is.null(wd_out)) {
-  wd_out <- paste0(wd_mod_out,'/',caseidprefix,'_processed')
-  setwd(wd_mod_out)
-}
-if(!file.exists(wd_out)) dir.create(wd_out)
-
-print('',quote=F)
-print('output directory:',quote=F)
-print(wd_out,quote=F)
-print('',quote=F)
-
-
 # separate spins from transient
 spinss <- grepl('1850', cases )
 cases  <- breakout_cases(cases, spinss, case_labs ) 
@@ -134,274 +128,328 @@ syear  <- breakout_cases(syear, spinss, case_labs )
 years  <- breakout_cases(years, spinss, case_labs ) 
 tsteps <- breakout_cases(tsteps, spinss, case_labs ) 
 
+# number of iterations for UQ loop
+print('here')
+if(is.null(uq)) { 
+  nuq <- 1 
+} else { 
+  nuq <- uq 
+} 
 
-# cases loop
+
+print('here')
+print(nuq)
+print(plot_only)
 if(!plot_only) {
-for(c in 1:length(cases)) {
-  setwd(wd_mod_out)
-  
-  cases_current   <- cases[[c]] 
-  syear_current   <- syear[[c]] 
-  years_current   <- years[[c]] 
-  tsteps_current  <- tsteps[[c]] 
-  ntsteps_current <- sum(years_current * tsteps_current)
-  
-  # combine sim variables to get all simulations
-  sims <- apply(as.matrix(expand.grid(caseidprefix,sites,cases_current)), 1, paste, collapse='_' )
-  print('',quote=F);print('',quote=F);print('',quote=F)
-  print('Processing (& concatenating) case(s):',quote=F)
-  print(sims,quote=F)
-  
-  s <- 1
-  # simulations loop
-  for(s in 1:length(sims)) {
-    setwd(paste(wd_mod_out,sims[s],'run',sep='/'))
+print('here is the error')
 
-    print('',quote=F)
-    print('Processing case:',quote=F)
-    print(sims[s],quote=F)
-    
-    if(sims[s]==sims[1]) {
-      print('',quote=F)
-      print('Setting up new netcdf file ... ',quote=F)
+# caseidprefix loop 
+for(cid in 1:length(caseidprefix)) {
 
-      fdate      <- paste0(formatC(syear_current[1], width=4, format="d", flag="0"), fstart_datetime )
-      ifile      <- paste(sims[s],mod,paste0('h',hist),fdate,'nc',sep='.')
-      ncdf1      <- nc_open(ifile)
-      vdims_list <- lapply(ncdf1$var, function(l) sapply(l$dim, function(l) l$name ) )
-      vdims_len  <- lapply(ncdf1$var, function(l) sapply(l$dim, function(l) l$len ) )
-      vars_units <- lapply(ncdf1$var, function(l) l$units )
-      
-      # redefine existing dimensions
-      # - to include all output timesteps 
-      newvars <-
-        lapply(ncdf1$var, 
-               function(var) {
-                 if(any(vdims_list[[var[['name']]]]=='time'))
-                   var$dim[[which(vdims_list[[var[['name']]]]=='time')]]$len <- ntsteps_current
-                 var
-               })
-      nc_close(ncdf1)
-      # - add dimension for ensemble members (OLMT UQ run) 
-
-
-      # subset variables
-      if(!is.null(vsub)) newvars <- newvars[vsub]
-      vnames <- names(newvars)
-      
-      # create new nc file
-      setwd(wd_out)
-      new_fname <- paste(caseidprefix,sites,names(cases)[c],sep='_')
-      newnc     <- nc_create(paste0(new_fname,'.nc'), newvars )
-      tend_prev <- tcaug <- 0
-      setwd(paste(wd_mod_out,sims[s],'run',sep='/'))
-      
-      # list of variables & key info in new file 
-      vars_list <- lapply(newnc$var, 
-                          function(l) list(
-                            name     = l$name,
-                            longname = l$longname,
-                            dims     = sapply(l$dim, function(l) l$name ),
-                            len      = sapply(l$dim, function(l) l$len ),
-                            units    = l$units
-                          ))
-      
-      # list of dimension variables
-      dimvars_list <- lapply(ncdf1$dim, 
-                             function(l) {
-                               if(l$dimvarid$id[1] > 0) {
-                                 list(
-                                   name     = l$name,
-                                   vals     = l$vals,
-                                   len      = l$len,
-                                   units    = l$units
-                                 )
-                               } else NULL
-                             })
-      
-      print('done.',quote=F)
-    }
-    
-    
-    # join files along redefined dimensions
-    ##############################################
-
-    # output file years
-    # - if not every year ELM/FATES will miss the final years of ouput if years_current does not divide exactly by fout_nyears 
-    if(names(years)[c]=='spins') {
-      # the + 1 here means yr 1 is not read as for a spin that shows the initialisation values
-      year_range <- syear_current[s]:years_current[s] + 1
-      #year_range <- seq(syear_current[s], years_current[s], fout_nyears )
-      timecount_augment <- tcaug
-    } else {
-      year_range <- syear_current[s]:(syear_current[s] + years_current[s] - 1)
-      #year_range <- seq(syear_current[s], (syear_current[s] + years_current[s] - 1), fout_nyears )
-      timecount_augment <- 0
-    }
-   
-
-    # add an ensemble loop - recommend reduced number of output variables 
-
-    # output file loop 
-    # can multicore this loop but requires OOP or other method
-    print('',quote=F)
-    print('Reading data and adding to new netcdf file ... ',quote=F)
-    for(y in year_range) {
-      fdate <- paste0(formatC(y, width=4, format="d", flag="0"), fstart_datetime )
-      ifile <- paste(sims[s], mod, paste0('h',hist), fdate, 'nc', sep='.' )
-      ncdf2 <- nc_open(ifile)
-
-      # add dim value
-      # there are also a bunch of time related variables
-      if(names(years)[c]=='spins') {
-        tstart <- y-1
-      } else {
-        tstart <- (y-year_range[1]) * tsteps_current[s] + 1
-      }
-      tstart   <- tstart + tend_prev
-      timevals <- ncvar_get(ncdf2, 'time' )
-      ncvar_put(newnc, 'time', timevals + timecount_augment, tstart, tsteps_current[s] )
-
-      # add var values
-      for(v in vnames) {
-        if(any(vdims_list[[v]]=='time')) {
-          start <- rep(1, length(vdims_list[[v]]) )
-          start[which(vdims_list[[v]]=='time')] <- tstart
-          count <- vdims_len[[v]]
-          count[which(vdims_list[[v]]=='time')] <- tsteps_current[s]
-          ncvar_put(newnc, v, ncvar_get(ncdf2, v ), start, count )
-        }
-      }
-    }
-    print('done.',quote=F)
-
-    
-    # sim loop
-    tend_prev <- tend_prev + years_current[s]*tsteps_current[s]
-    tcaug     <- timevals[length(timevals)]
+  null_wd_out <- F 
+  print('here')
+  if(is.null(wd_out)) {
+    wd_out <- paste0(wd_mod_out,'/',caseidprefix[cid],'_processed')
     setwd(wd_mod_out)
+    null_wd_out <- T
   }
+  if(!file.exists(wd_out)) dir.create(wd_out)
   
-  
-  # take data in newnc and create labeled R arrays
-  dim_combos <- sapply(unique(vdims_list), function(v) paste(v, collapse=',' ) )
-  dc_ss      <- sapply(vdims_list, function(v) which(dim_combos==paste(v, collapse=',' ))  )
-  dc_nvars   <- data.frame(dim_combos, nvars=tabulate(dc_ss) )
-  dlen       <- sapply(newnc$dim, function(l) l$len )
-  
-  # for each unique combination of dimensions create an array
   print('',quote=F)
-  print('Creating R arrays ... ',quote=F)
-  al <- list()
-  for(dc in 1:length(dim_combos)) {
-    # find variables with dim_combos[dc] dimensions 
-    avar_names <- names(dc_ss)[which(dc_ss==dc)]
-    
-    # create and label array
-    ndims                    <- length(unique(vdims_list)[[dc]])
-    dimnames                 <- c(rep(list(NULL),ndims), list(vars=avar_names))
-    names(dimnames)[1:ndims] <- unique(vdims_list)[[dc]]
-    # APW: need to add dimnames where appropriate, e.g. for ground levels, time? (could add a POSIX standard)
-    adim <- dlen[names(dimnames)[1:ndims]]
-    a    <- array(dim=c(adim,vars=length(avar_names)), dimnames=dimnames ) 
-    amss <- as.matrix(expand.grid(lapply(adim, function(i) 1:i)))
-    
-    # populate array with variables & convert units
-    for(v in avar_names) {
-      vss                <- which(avar_names==v)
-      a[cbind(amss,vss)] <- ncvar_get(newnc, v )
-    }
-    
-    # combine arrays into a list
-    al <- c(al, list(a) )
-    names(al)[length(al)] <- dim_combos[dc]
-  }
-  print('done.',quote=F)
+  print('Caseidprefix:',quote=F)
+  print(caseidprefix[cid],quote=F)
+  print('output directory:',quote=F)
+  print(wd_out,quote=F)
+  print('',quote=F)
   
-  # close/write nc file
-  nc_close(newnc)
-  # zip nc file
-  setwd(wd_out)
-  if(zip) system(paste('gzip ', paste0(new_fname,'.nc') ))
-
+  
+  # cases loop
+  for(c in 1:length(cases)) {
+    setwd(wd_mod_out)
     
-  # Create annual data from daily data if requested
-  ald <- NULL
-  if(to_annual & tsteps_current[1]>1) {
-    print('',quote=F)
-    print('Aggregating sub-annual data ... ',quote=F)
+    cases_current   <- cases[[c]] 
+    syear_current   <- syear[[c]] 
+    years_current   <- years[[c]] 
+    tsteps_current  <- tsteps[[c]] 
+    ntsteps_current <- sum(years_current * tsteps_current)
     
-    ald <- lapply(al, function(a) {
-      adim <- dim(a)
-      if('time'%in%names(adim) & !any(names(adim)%in%char_dims)) {
-        a <- summarize_array(a, summarise_dim='time', extent=tsteps_current[1] )
+    # combine sim variables to get all simulations to be put in a single file
+    sims <- apply(as.matrix(expand.grid(caseidprefix[cid],sites,cases_current)), 1, paste, collapse='_' )
+    print('',quote=F);print('',quote=F);print('',quote=F)
+    print('Processing (& concatenating) case(s):',quote=F)
+    print(sims,quote=F)
+    
+    # UQ loop
+    for(u in 1:nuq) {
+    
+      s <- 1
+      # simulations loop
+      # - sims simulations will end up in the same nc and RDS file
+      for(s in 1:length(sims)) {
+  
+        wd_mod_out_sim <- if(is.null(uq)) {
+            paste(wd_mod_out,sims[s],'run', sep='/' )
+          } else {
+            uq_memeber <- paste0('g',formatC(a,width=5,flag=0))
+            paste(wd_mod_out,'UQ',sims[s],uq_member, sep='/' )
+          }
+        setwd(wd_mod_out_sim)
+    
+        print('',quote=F)
+        print('Processing case:',quote=F)
+        print(sims[s],quote=F)
+        if(!is.null(uq)) print(paste('  ','uq member:',uq_member, quote=F )       
+ 
+        if(sims[s]==sims[1] | !is.null(uq)) {
+          print('',quote=F)
+          print('Setting up new netcdf file ... ',quote=F)
+    
+          fdate      <- paste0(formatC(syear_current[1], width=4, format="d", flag="0"), fstart_datetime )
+          ifile      <- paste(sims[s],mod,paste0('h',hist),fdate,'nc',sep='.')
+          ncdf1      <- nc_open(ifile)
+          vdims_list <- lapply(ncdf1$var, function(l) sapply(l$dim, function(l) l$name ) )
+          vdims_len  <- lapply(ncdf1$var, function(l) sapply(l$dim, function(l) l$len ) )
+          vars_units <- lapply(ncdf1$var, function(l) l$units )
+          
+          # redefine existing dimensions
+          # - to include all output timesteps 
+          newvars <-
+            lapply(ncdf1$var, 
+                   function(var) {
+                     if(any(vdims_list[[var[['name']]]]=='time'))
+                       var$dim[[which(vdims_list[[var[['name']]]]=='time')]]$len <- ntsteps_current
+                     var
+                   })
+          nc_close(ncdf1)
+    
+    
+          # subset variables
+          if(!is.null(vsub)) newvars <- newvars[vsub]
+          vnames <- names(newvars)
+          
+          # create new nc file
+          setwd(wd_out)
+          new_fname <- paste(caseidprefix[cid],sites,names(cases)[c],sep='_')
+          if(!is.null(uq)) new_fname <- paste(new_fname,uq_member,sep='_')
+          newnc     <- nc_create(paste0(new_fname,'.nc'), newvars )
+          tend_prev <- tcaug <- 0
+          setwd(wd_mod_out_sim)
+          
+          # list of variables & key info in new file 
+          vars_list <- lapply(newnc$var, 
+                              function(l) list(
+                                name     = l$name,
+                                longname = l$longname,
+                                dims     = sapply(l$dim, function(l) l$name ),
+                                len      = sapply(l$dim, function(l) l$len ),
+                                units    = l$units
+                              ))
+          
+          # list of dimension variables
+          dimvars_list <- lapply(ncdf1$dim, 
+                                 function(l) {
+                                   if(l$dimvarid$id[1] > 0) {
+                                     list(
+                                       name     = l$name,
+                                       vals     = l$vals,
+                                       len      = l$len,
+                                       units    = l$units
+                                     )
+                                   } else NULL
+                                 })
+          
+          print('done.',quote=F)
+        # end of first sim if
+        }
+        
+        
+        # join history files along redefined dimensions
+        ##############################################
+    
+        # output file years
+        # - if not every year ELM/FATES will miss the final years of ouput if years_current does not divide exactly by fout_nyears 
+        if(names(years)[c]=='spins') {
+          # the + 1 here means yr 1 is not read as for a spin that shows the initialisation values
+          #year_range <- syear_current[s]:years_current[s] + 1 # but when spin output is more than annual it records useful data
+          year_range <- syear_current[s]:years_current[s]
+          #year_range <- seq(syear_current[s], years_current[s], fout_nyears )
+          timecount_augment <- tcaug
+        } else {
+          year_range <- syear_current[s]:(syear_current[s] + years_current[s] - 1)
+          #year_range <- seq(syear_current[s], (syear_current[s] + years_current[s] - 1), fout_nyears )
+          timecount_augment <- 0
+        }
+       
+    
+        # history file loop 
+        # can multicore this loop but requires OOP or other method
+        print('',quote=F)
+        print('Reading data and adding to new netcdf file ... ',quote=F)
+        for(y in year_range) {
+          fdate <- paste0(formatC(y, width=4, format="d", flag="0"), fstart_datetime )
+          ifile <- paste(sims[s], mod, paste0('h',hist), fdate, 'nc', sep='.' )
+          ncdf2 <- nc_open(ifile)
+          print(paste('  ',ifile,'open.'), quote=F )
+    
+          # add dim value
+          # there are also a bunch of time related variables
+          if(names(years)[c]=='spins' & tsteps_current[s]==1) {
+            tstart <- y-1
+          } else {
+            tstart <- (y-year_range[1]) * tsteps_current[s] + 1
+          }
+          tstart   <- tstart + tend_prev
+          timevals <- ncvar_get(ncdf2, 'time' )
+          ncvar_put(newnc, 'time', timevals + timecount_augment, tstart, tsteps_current[s] )
+    
+          # add var values
+          for(v in vnames) {
+            if(any(vdims_list[[v]]=='time')) {
+              start <- rep(1, length(vdims_list[[v]]) )
+              start[which(vdims_list[[v]]=='time')] <- tstart
+              count <- vdims_len[[v]]
+              count[which(vdims_list[[v]]=='time')] <- tsteps_current[s]
+              ncvar_put(newnc, v, ncvar_get(ncdf2, v ), start, count )
+            }
+          }
+        }
+        print('done.',quote=F)
+    
+        
+        tend_prev <- tend_prev + years_current[s]*tsteps_current[s]
+        tcaug     <- timevals[length(timevals)]
+        setwd(wd_mod_out)
+      # sim loop
       }
-      a
-    }) 
     
-    print('done.',quote=F)
-  }
-
-
-  # Variable conversion if requested
-  if(varconv) {
-    print('',quote=F)
-    print('Variable conversions for R arrays ... ',quote=F)
-    
-    al  <- lapply(al, var_conv_array, var_conv=var_conv, vars_units=vars_units, tstep=tsteps_current[1] ) 
-    ald <- if(!is.null(ald)) 
-           lapply(ald, var_conv_array, var_conv=var_conv, vars_units=vars_units, tstep=tsteps_current[1] )
-    
-    vars_units <- lapply(vars_units, function(c) 
-      if(is.null(var_conv[[c]])) c else var_conv[[c]]$newunits )
-    print('done.',quote=F)
-    
-    if(timeconv) {
+      
+      # take data in newnc and create labeled R arrays
+      dim_combos <- sapply(unique(vdims_list), function(v) paste(v, collapse=',' ) )
+      dc_ss      <- sapply(vdims_list, function(v) which(dim_combos==paste(v, collapse=',' ))  )
+      dc_nvars   <- data.frame(dim_combos, nvars=tabulate(dc_ss) )
+      dlen       <- sapply(newnc$dim, function(l) l$len )
+      
+      # for each unique combination of dimensions create an array
       print('',quote=F)
-      print('Time unit conversions for R arrays ... ',quote=F)
-      
-      al  <- lapply(al, var_conv_array, var_conv=time_conv, vars_units=vars_units, tstep=tsteps_current[1] ) 
-      ald <- if(!is.null(ald)) 
-        lapply(ald, var_conv_array, var_conv=time_conv, vars_units=vars_units, tstep=1 )
-      
-      vars_units <- lapply(vars_units, function(c) 
-        if(is.null(time_conv[[c]])) c else time_conv[[c]]$newunits )
+      print('Creating R arrays ... ',quote=F)
+      al <- list()
+      for(dc in 1:length(dim_combos)) {
+        
+        # find variables with dim_combos[dc] dimensions 
+        avar_names <- names(dc_ss)[which(dc_ss==dc)]
+        
+        # create and label array
+        ndims                    <- length(unique(vdims_list)[[dc]])
+        dimnames                 <- c(rep(list(NULL),ndims), list(vars=avar_names))
+        names(dimnames)[1:ndims] <- unique(vdims_list)[[dc]]
+        # APW: need to add dimnames where appropriate, e.g. for ground levels, time? (could add a POSIX standard)
+        adim <- dlen[names(dimnames)[1:ndims]]
+        a    <- array(dim=c(adim,vars=length(avar_names)), dimnames=dimnames ) 
+        amss <- as.matrix(expand.grid(lapply(adim, function(i) 1:i)))
+        
+        # populate array with variables & convert units
+        for(v in avar_names) {
+          vss                <- which(avar_names==v)
+          a[cbind(amss,vss)] <- ncvar_get(newnc, v )
+        }
+        
+        # combine arrays into a list
+        al <- c(al, list(a) )
+        names(al)[length(al)] <- dim_combos[dc]
+      }
       print('done.',quote=F)
-    }
+      
+      # close/write nc file
+      nc_close(newnc)
+      # zip nc file
+      setwd(wd_out)
+      if(zip) system(paste('gzip ', paste0(new_fname,'.nc') ))
     
-    # update vars_list
-    vars_list <- lapply(vars_list, function(l) {
-      l$units <- vars_units[[l$name]]
-      l
-    })
-  }
-
-  
-  # create output list(s) & save RDS file(s)
-  print('',quote=F)
-  print('Writing RDS file(s) ... ',quote=F)
-  
-  setwd(wd_out)
-  l1 <- list(dimensions=dlen, dim_combinations=dc_nvars, 
-             variables=vars_list, dim_variables=dimvars_list, 
-             data_arrays=al )
-  saveRDS(l1, paste0(new_fname,'.RDS') )
-  
-  if(!is.null(ald)) {
-    l1 <- list(dimensions=dlen, dim_combinations=dc_nvars, 
-               variables=vars_list, dim_variables=dimvars_list, 
-               data_arrays=ald )
-    saveRDS(l1, paste0(new_fname,'_annual.RDS') )
-  }
-  print('done.',quote=F)
-  
-  # cases loop & plot only if  
-}}
+        
+      # Create annual data from daily data if requested
+      ald <- NULL
+      if(to_annual & tsteps_current[1]>1) {
+        print('',quote=F)
+        print('Aggregating sub-annual data ... ',quote=F)
+        
+        ald <- lapply(al, function(a) {
+          adim <- dim(a)
+          if('time'%in%names(adim) & !any(names(adim)%in%char_dims)) {
+            a <- summarize_array(a, summarise_dim='time', extent=tsteps_current[1] )
+          }
+          a
+        }) 
+        
+        print('done.',quote=F)
+      }
+    
+    
+      # Variable conversion if requested
+      if(varconv) {
+        print('',quote=F)
+        print('Variable conversions for R arrays ... ',quote=F)
+        
+        al  <- lapply(al, var_conv_array, var_conv=var_conv, vars_units=vars_units, tstep=tsteps_current[1] ) 
+        ald <- if(!is.null(ald)) 
+               lapply(ald, var_conv_array, var_conv=var_conv, vars_units=vars_units, tstep=tsteps_current[1] )
+        
+        vars_units <- lapply(vars_units, function(c) 
+          if(is.null(var_conv[[c]])) c else var_conv[[c]]$newunits )
+        print('done.',quote=F)
+        
+        if(timeconv) {
+          print('',quote=F)
+          print('Time unit conversions for R arrays ... ',quote=F)
+          
+          al  <- lapply(al, var_conv_array, var_conv=time_conv, vars_units=vars_units, tstep=tsteps_current[1] ) 
+          ald <- if(!is.null(ald)) 
+            lapply(ald, var_conv_array, var_conv=time_conv, vars_units=vars_units, tstep=1 )
+          
+          vars_units <- lapply(vars_units, function(c) 
+            if(is.null(time_conv[[c]])) c else time_conv[[c]]$newunits )
+          print('done.',quote=F)
+        }
+        
+        # update vars_list
+        vars_list <- lapply(vars_list, function(l) {
+          l$units <- vars_units[[l$name]]
+          l
+        })
+      }
+    
+      
+      # create output list(s) & save RDS file(s)
+      print('',quote=F)
+      print('Writing RDS file(s) ... ',quote=F)
+      
+      setwd(wd_out)
+      l1 <- list(dimensions=dlen, dim_combinations=dc_nvars, 
+                 variables=vars_list, dim_variables=dimvars_list, 
+                 data_arrays=al )
+      saveRDS(l1, paste0(new_fname,'.RDS') )
+      
+      if(!is.null(ald)) {
+        l1 <- list(dimensions=dlen, dim_combinations=dc_nvars, 
+                   variables=vars_list, dim_variables=dimvars_list, 
+                   data_arrays=ald )
+        saveRDS(l1, paste0(new_fname,'_annual.RDS') )
+      }
+      print('done.',quote=F)
+    
+      if(null_wd_out) wd_out <- NULL  
+      # caseidprefix & cases & uq loops, & plot only if  
+}}}}
 
 
 if(call_plot) {
   setwd(wd_src)
   source('plot_ELM.R', local=T )
+}
+
+
+if(concatenate_caseid | concatenate_uq) {
+  setwd(wd_src)
+  source('concatenate_ELM.R', local=T )
 }
 
 
