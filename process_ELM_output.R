@@ -129,25 +129,15 @@ years  <- breakout_cases(years, spinss, case_labs )
 tsteps <- breakout_cases(tsteps, spinss, case_labs ) 
 
 # number of iterations for UQ loop
-print('here')
-if(is.null(uq)) { 
-  nuq <- 1 
-} else { 
-  nuq <- uq 
-} 
+nuq <- if(is.null(uq)) 1 else  uq
 
 
-print('here')
-print(nuq)
-print(plot_only)
 if(!plot_only) {
-print('here is the error')
 
 # caseidprefix loop 
 for(cid in 1:length(caseidprefix)) {
 
   null_wd_out <- F 
-  print('here')
   if(is.null(wd_out)) {
     wd_out <- paste0(wd_mod_out,'/',caseidprefix[cid],'_processed')
     setwd(wd_mod_out)
@@ -190,7 +180,7 @@ for(cid in 1:length(caseidprefix)) {
         wd_mod_out_sim <- if(is.null(uq)) {
             paste(wd_mod_out,sims[s],'run', sep='/' )
           } else {
-            uq_memeber <- paste0('g',formatC(a,width=5,flag=0))
+            uq_member <- paste0('g',formatC(u,width=5,flag=0))
             paste(wd_mod_out,'UQ',sims[s],uq_member, sep='/' )
           }
         setwd(wd_mod_out_sim)
@@ -198,7 +188,7 @@ for(cid in 1:length(caseidprefix)) {
         print('',quote=F)
         print('Processing case:',quote=F)
         print(sims[s],quote=F)
-        if(!is.null(uq)) print(paste('  ','uq member:',uq_member, quote=F )       
+        if(!is.null(uq)) print(paste('  ','uq member:',uq_member), quote=F )       
  
         if(sims[s]==sims[1] | !is.null(uq)) {
           print('',quote=F)
@@ -269,13 +259,13 @@ for(cid in 1:length(caseidprefix)) {
         # output file years
         # - if not every year ELM/FATES will miss the final years of ouput if years_current does not divide exactly by fout_nyears 
         if(names(years)[c]=='spins') {
-          # the + 1 here means yr 1 is not read as for a spin that shows the initialisation values
-          #year_range <- syear_current[s]:years_current[s] + 1 # but when spin output is more than annual it records useful data
-          year_range <- syear_current[s]:years_current[s]
+          # the + read_final_year here means yr 1 is not read as for a spin that shows the initialisation values
+          read_final_year <- if(tsteps_current[s]==1) 1 else 0
+          year_range      <- syear_current[s]:years_current[s] + read_final_year
           #year_range <- seq(syear_current[s], years_current[s], fout_nyears )
           timecount_augment <- tcaug
         } else {
-          year_range <- syear_current[s]:(syear_current[s] + years_current[s] - 1)
+          year_range      <- syear_current[s]:(syear_current[s] + years_current[s] - 1)
           #year_range <- seq(syear_current[s], (syear_current[s] + years_current[s] - 1), fout_nyears )
           timecount_augment <- 0
         }
@@ -300,6 +290,11 @@ for(cid in 1:length(caseidprefix)) {
           }
           tstart   <- tstart + tend_prev
           timevals <- ncvar_get(ncdf2, 'time' )
+          #print(tstart)
+          #print(tsteps_current[s])
+          #print(timevals)
+          #print(timecount_augment)
+          #tstart <- 1 
           ncvar_put(newnc, 'time', timevals + timecount_augment, tstart, tsteps_current[s] )
     
           # add var values
