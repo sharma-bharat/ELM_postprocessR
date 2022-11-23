@@ -7,6 +7,8 @@
 #
 ##############################
 
+library(ggplot2)
+
 
 
 plot_3dim <- function(a3d=algtime, vvars=c('GPP','NPP','AR'), xdim='time', 
@@ -24,6 +26,33 @@ plot_3dim <- function(a3d=algtime, vvars=c('GPP','NPP','AR'), xdim='time',
            auto.key=list(lines=T, points=F, corner=c(0,1), x=0, y=1, 
                          columns=leg_cols, border=T, cex=0.75, background='white' ),
            ... )
+  
+  if(print2screen) print(p1)
+  p1
+}
+
+
+plot_stack <- function(a3d=algtime, vvars=c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
+                       norm=F, xdim='time', 
+                       vcol=NULL, leg_cols=4, print2screen=T, ... ) {
+  lv <- length(vvars)
+  lx <- dim(a3d)[xdim]
+  if(is.null(vcol)) vcol <- viridis(lv)
+ 
+  as   <- a3d[,,vvars]
+  tas  <- as.data.frame(as)
+  stas <- stack(tas, alloc )
+ 
+  if(norm) {
+    sumas <- apply(as, 1, sum )
+    stas$values <- stas$values / sumas
+  }
+
+  p1 <- 
+    ggplot(stas, aes(x=rep(1:lx,lv), y=values, fill=ind)) +
+    geom_area() +
+    ylab(ylab) + 
+    labs(fill='')
   
   if(print2screen) print(p1)
   p1
@@ -130,8 +159,11 @@ make_figures <- function(a3d, a4d, plotlist, xlab='Spin-up', timestep='year', pr
     if(timestep=='year') {
       days <- 365
     }
-    
-    if(is.null(l$v4d)) {
+   
+    if(!is.null(l$stackplot) {
+      plot_stack(a3d, vvars=l$vvars, norm=l$norm, ylab=l$ylab, xlab=paste(xlab,timestep), print2screen=print2screen, days=days )
+
+    } if(is.null(l$v4d)) {
       if(combvars) {
         plot_3dim_combvars(a3d, sum_vars=l$sum_vars, product_vars=l$product_vars, 
                            subtract_vars=l$subtract_vars, 
@@ -141,6 +173,7 @@ make_figures <- function(a3d, a4d, plotlist, xlab='Spin-up', timestep='year', pr
       } else {
         plot_3dim(a3d, vvars=l$vvars, ylab=l$ylab, xlab=paste(xlab,timestep), print2screen=print2screen, days=days )
       }
+
     } else {
       if(!is.null(a4d)) {
         plot_4dim(a4d, vvars=l$vvars, dim_sub=l$dim_sub, ylab=l$ylab, xlab=paste(xlab,timestep), 
