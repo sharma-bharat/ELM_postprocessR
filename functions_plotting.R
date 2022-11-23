@@ -73,7 +73,7 @@ plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR
   if(is.null(vcol))           vcol <- viridis(length(groups))
   if(length(groups)<leg_cols) leg_cols <- length(groups)
 
-  dummy_var <- if(!('TRIMMING'%in%vvars)) 'TRIMMING' else 'NPP_CROOT'  
+  dummy_var <- if(!('FATES_TRIMMING'%in%vvars)) 'FATES_TRIMMING' else 'FATES_CROOT_ALLOC'  
   a3d[,,dummy_var] <- asum[,]
   dimnames(a3d)[[3]][which(dimnames(a3d)[[3]]==dummy_var)] <- nv_name
   

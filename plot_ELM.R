@@ -68,7 +68,7 @@ source('functions_plotting.R')
 
 
 # plotting lists
-source('info_plotting.R')
+source('info_plotting_fatesoutv2.R')
 
 
 

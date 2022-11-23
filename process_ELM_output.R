@@ -76,7 +76,8 @@ time_vars       <- c('mcdate', 'mcsec', 'mdcur', 'mscur', 'nstep',
 fstart_datetime <- '-01-01-00000'
 # number of years in each output file
 fout_nyears     <- 1
-
+# missing value for new netcdf file
+missval         <- 1.e36
 
 # switches
 sep_spin        <- T    # separate spin cases from transient ones, done automatically if tsteps are different
@@ -127,6 +128,7 @@ cases  <- breakout_cases(cases, spinss, case_labs )
 syear  <- breakout_cases(syear, spinss, case_labs ) 
 years  <- breakout_cases(years, spinss, case_labs ) 
 tsteps <- breakout_cases(tsteps, spinss, case_labs ) 
+print(cases,quote=F)
 
 # number of iterations for UQ loop
 nuq <- if(is.null(uq)) 1 else  uq
@@ -221,6 +223,8 @@ for(cid in 1:length(caseidprefix)) {
           setwd(wd_out)
           new_fname <- paste(caseidprefix[cid],sites,names(cases)[c],sep='_')
           if(!is.null(uq)) new_fname <- paste(new_fname,uq_member,sep='_')
+          print(new_fname,quote=F)
+          print(ntsteps_current,quote=F)
           newnc     <- nc_create(paste0(new_fname,'.nc'), newvars )
           tend_prev <- tcaug <- 0
           setwd(wd_mod_out_sim)
@@ -275,36 +279,61 @@ for(cid in 1:length(caseidprefix)) {
         # can multicore this loop but requires OOP or other method
         print('',quote=F)
         print('Reading data and adding to new netcdf file ... ',quote=F)
+        print(year_range,quote=F)
+        print('',quote=F)
+        print('',quote=F)
         for(y in year_range) {
           fdate <- paste0(formatC(y, width=4, format="d", flag="0"), fstart_datetime )
           ifile <- paste(sims[s], mod, paste0('h',hist), fdate, 'nc', sep='.' )
-          ncdf2 <- nc_open(ifile)
-          print(paste('  ',ifile,'open.'), quote=F )
     
-          # add dim value
-          # there are also a bunch of time related variables
+          # time counting variables
           if(names(years)[c]=='spins' & tsteps_current[s]==1) {
             tstart <- y-1
           } else {
             tstart <- (y-year_range[1]) * tsteps_current[s] + 1
           }
           tstart   <- tstart + tend_prev
-          timevals <- ncvar_get(ncdf2, 'time' )
           #print(tstart)
           #print(tsteps_current[s])
-          #print(timevals)
           #print(timecount_augment)
           #tstart <- 1 
-          ncvar_put(newnc, 'time', timevals + timecount_augment, tstart, tsteps_current[s] )
     
+          if(file.exists(ifile)) {
+            ncdf2 <- nc_open(ifile)
+            print(paste('  ',ifile,'open.'), quote=F )
+      
+            # add time dim value
+            timevals <- ncvar_get(ncdf2, 'time' )
+            #print(timevals)
+            ncvar_put(newnc, 'time', timevals + timecount_augment, tstart, tsteps_current[s] )
+          } else {
+            print(paste('  ',ifile,'does not exist.'), quote=F )
+          }
+      
           # add var values
           for(v in vnames) {
             if(any(vdims_list[[v]]=='time')) {
+              # netcdf start and count arguments
               start <- rep(1, length(vdims_list[[v]]) )
               start[which(vdims_list[[v]]=='time')] <- tstart
               count <- vdims_len[[v]]
               count[which(vdims_list[[v]]=='time')] <- tsteps_current[s]
-              ncvar_put(newnc, v, ncvar_get(ncdf2, v ), start, count )
+      
+#              if(v=='FATES_GPP' | !file.exists(ifile)) {
+#                print(vdims_len[[v]])
+#                print(which(vdims_list[[v]]=='time'))
+#                print(tsteps_current[s])
+#                print(c(start,count))
+#                print(vals)
+#              }
+
+              # get values and paste them
+              vals <- if(file.exists(ifile)) ncvar_get(ncdf2, v ) else rep(missval, prod(count) )
+              ncvar_put(newnc, v, vals, start, count )
+#                ncvar_put(newnc, v, ncvar_get(ncdf2, v ), start, count )
+#              } else {
+#                ncvar_put(newnc, v, rep(missval, count ), start, count )
+#              } 
             }
           }
         }

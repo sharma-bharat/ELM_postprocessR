@@ -29,6 +29,7 @@ conv_sh_to_rh <- function(q, t, p=101325 ) {
 change_unit_label        <- function(v,...)  v                                        # no conversion, just change label
 conv_K_to_oC             <- function(v,...) (v - 273.15)                              # converts K to oC
 conv_kgpha_to_gpm2       <- function(v,...)  v * 1e-1                                 # kg ha-1 to g m-2   
+conv_kgpm2_to_gpm2       <- function(v,...)  v * 1e3                                  # kg m-2 to g m-2   
 conv_kgphapd_to_gpm2psec <- function(v,...)  v * 1e-1 / (3600*24)                     # kg ha-1 d-1 to g m-2 s-1   
 conv_kgpyear_to_gpsec    <- function(v,...)  v * 1e3 / (3600*24*365)                  # kg yr-1 to g s-1   
 conv_psecond_to_pts      <- function(v,tsteps_in_yr,...) v * 3600*24*365/tsteps_in_yr # per second units to the timestep of the data     
@@ -51,6 +52,14 @@ var_conv <- list(
   `kgC ha-1` = list(
     func = conv_kgpha_to_gpm2,
     newunits = 'gC/m2'
+  ),
+  `kg m-2 s-1` = list(
+    func = conv_kgpm2_to_gpm2,
+    newunits = 'g/m2/s'
+  ),
+  `kg m-2` = list(
+    func = conv_kgpm2_to_gpm2,
+    newunits = 'g/m2'
   ),
   `kgN ha-1` = list(
     func = conv_kgpha_to_gpm2,
@@ -94,6 +103,10 @@ time_conv <- list(
     func = conv_psecond_to_pts,
     newunits = 'gC/m2/timestep'
   ), 
+  `g/m2/s` = list(
+    func = conv_psecond_to_pts,
+    newunits = 'g/m2/timestep'
+  ),
   `gC/m2/s` = list(
     func = conv_psecond_to_pts,
     newunits = 'gC/m2/timestep'
