@@ -97,7 +97,7 @@ for(c in 1:length(case_labs)) {
   plots <- make_figures(algtime, alglgtime, plotlist=plotlist_phys, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
   plot_figures(plots, paste0(fname,'_physiology','.pdf') )
 
-  if(grepl('CNP',caseidprefix) | plot_nutrients) {
+  if(grepl('NP',caseidprefix) | plot_nutrients) {
     print('PLOTTING NUTRIENTS')
     plots <- make_figures(algtime, plotlist=plotlist_nutrients, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
     plot_figures(plots, paste0(fname,'_nutrients','.pdf') )
@@ -113,7 +113,7 @@ for(c in 1:length(case_labs)) {
     plots <- make_figures(algtime_annual, plotlist=plotlist, xlab=case_xlabs[case_labs[c]], timestep='year' )
     plot_figures(plots, paste0(fname,'_annual','.pdf') )
   
-    if(grepl('CNP',caseidprefix) | plot_nutrients) {
+    if(grepl('NP',caseidprefix) | plot_nutrients) {
       plots <- make_figures(algtime_annual, plotlist=plotlist_nutrients, xlab=case_xlabs[case_labs[c]], timestep='year' )
       plot_figures(plots, paste0(fname,'_annual_nutrients','.pdf') )
     }  

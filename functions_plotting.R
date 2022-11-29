@@ -8,6 +8,7 @@
 ##############################
 
 library(ggplot2)
+library(png)
 
 
 
@@ -33,7 +34,7 @@ plot_3dim <- function(a3d=algtime, vvars=c('GPP','NPP','AR'), xdim='time',
 
 
 plot_stack <- function(a3d=algtime, vvars=c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
-                       norm=F, xdim='time', 
+                       norm=F, xdim='time', ylabi, xlabi,
                        vcol=NULL, leg_cols=4, print2screen=T, ... ) {
   lv <- length(vvars)
   lx <- dim(a3d)[xdim]
@@ -41,7 +42,7 @@ plot_stack <- function(a3d=algtime, vvars=c('FATES_CROOT_ALLOC','FATES_FROOT_ALL
  
   as   <- a3d[,,vvars]
   tas  <- as.data.frame(as)
-  stas <- stack(tas, alloc )
+  stas <- stack(tas, vvars )
  
   if(norm) {
     sumas <- apply(as, 1, sum )
@@ -51,7 +52,8 @@ plot_stack <- function(a3d=algtime, vvars=c('FATES_CROOT_ALLOC','FATES_FROOT_ALL
   p1 <- 
     ggplot(stas, aes(x=rep(1:lx,lv), y=values, fill=ind)) +
     geom_area() +
-    ylab(ylab) + 
+    ylab(ylabi) + 
+    xlab(xlabi) + 
     labs(fill='')
   
   if(print2screen) print(p1)
@@ -160,10 +162,10 @@ make_figures <- function(a3d, a4d, plotlist, xlab='Spin-up', timestep='year', pr
       days <- 365
     }
    
-    if(!is.null(l$stackplot) {
-      plot_stack(a3d, vvars=l$vvars, norm=l$norm, ylab=l$ylab, xlab=paste(xlab,timestep), print2screen=print2screen, days=days )
+    if(!is.null(l$stackplot)) {
+      plot_stack(a3d, vvars=l$vvars, norm=l$norm, ylabi=l$ylab, xlabi=paste(xlab,timestep), print2screen=print2screen, days=days )
 
-    } if(is.null(l$v4d)) {
+    } else if(is.null(l$v4d)) {
       if(combvars) {
         plot_3dim_combvars(a3d, sum_vars=l$sum_vars, product_vars=l$product_vars, 
                            subtract_vars=l$subtract_vars, 
@@ -186,19 +188,56 @@ make_figures <- function(a3d, a4d, plotlist, xlab='Spin-up', timestep='year', pr
 }
 
 
-plot_figures <- function(plots, plotname='plots.pdf', nper_page=3 ) {
+plot_figures <- function(plots, plotname='plots.pdf', nper_page=3, png=F ) {
   print('', quote=F )
+  if(png) plotname <- paste0(strsplit(plotname,'.')[[1]], '_png.pdf')
   print(paste('Saving figures to:',plotname), quote=F )
+ 
+  if(png) {
+    plotlist_png(plots, plotname )
+ 
+  } else { 
+    pdf(plotname, width=8.5, height=11 )
+    lapply(1:length(plots), function(p) {
+      print(plots[p], 
+            split=c(1,p%%nper_page+if(p%%nper_page==0) nper_page else 0,1,nper_page), 
+            more=p%%nper_page )
+      numeric(0)
+    })
+    dev.off()
+ 
+  }
+}
+
+
+plotPNG <- function(png) {
+  plot(c(0,1),c(0,1),type="n")
+  rasterImage(png,0,0,1,1)
+}
+
+
+plotlist_png <- function(plotlist, fname='plotlist_png.pdf', ... ) {
+
+  if(!file.exists('plots')) dir.create('plots')
+  setwd('plots')
+
+  # plot as png's
+  png('list-test%03d.png')
+  eval(plotlist)
+  dev.off()
+
+  # read png's to list
+  plotlist_png <- lapply(1:length(plotlist), function(i) readPNG(paste0("list-test",formatC(i, width=3, format="d", flag="0"),".png")) )
   
-  pdf(plotname, width=8.5, height=11 )
-  lapply(1:length(plots), function(p) {
-    print(plots[p], 
-          split=c(1,p%%nper_page+if(p%%nper_page==0) nper_page else 0,1,nper_page), 
-          more=p%%nper_page )
-    numeric(0)
-  })
+  # write png's to single pdf
+  setwd('..')
+  pdf(fname)
+  par(mai=c(0,0,0,0))
+  dummy <- lapply(plotlist_png, plotPNG )
   dev.off()
 }
+
+
 
 
 

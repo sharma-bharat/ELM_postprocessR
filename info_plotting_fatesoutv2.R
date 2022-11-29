@@ -36,13 +36,13 @@ plotlist <- list(
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
   p1.1 = list(
-    stack_plot = T,
+    stackplot = T,
     norm  = F, 
     vvars = c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
   p1.2 = list(
-    stack_plot = T,
+    stackplot = T,
     norm  = T, 
     vvars = c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
