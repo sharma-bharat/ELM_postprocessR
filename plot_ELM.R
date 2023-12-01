@@ -92,15 +92,15 @@ for(c in 1:length(case_labs)) {
   
   # plot required figures
   plots <- make_figures(algtime, plotlist=plotlist, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
-  plot_figures(plots, paste0(fname,'.pdf') )
+  plot_figures(plots, paste0(fname,'.pdf'), png=png )
   
   plots <- make_figures(algtime, alglgtime, plotlist=plotlist_phys, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
-  plot_figures(plots, paste0(fname,'_physiology','.pdf') )
+  plot_figures(plots, paste0(fname,'_physiology','.pdf'), png=png )
 
   if(grepl('NP',caseidprefix) | plot_nutrients) {
     print('PLOTTING NUTRIENTS')
     plots <- make_figures(algtime, plotlist=plotlist_nutrients, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
-    plot_figures(plots, paste0(fname,'_nutrients','.pdf') )
+    plot_figures(plots, paste0(fname,'_nutrients','.pdf'), png=png )
   }  
   
   # extract & plot annual data
@@ -111,11 +111,11 @@ for(c in 1:length(case_labs)) {
     alglgtime_annual <- l2$data_arrays$`lndgrid,levgrnd,time`
     
     plots <- make_figures(algtime_annual, plotlist=plotlist, xlab=case_xlabs[case_labs[c]], timestep='year' )
-    plot_figures(plots, paste0(fname,'_annual','.pdf') )
+    plot_figures(plots, paste0(fname,'_annual','.pdf'), png=png )
   
     if(grepl('NP',caseidprefix) | plot_nutrients) {
       plots <- make_figures(algtime_annual, plotlist=plotlist_nutrients, xlab=case_xlabs[case_labs[c]], timestep='year' )
-      plot_figures(plots, paste0(fname,'_annual_nutrients','.pdf') )
+      plot_figures(plots, paste0(fname,'_annual_nutrients','.pdf'), png=png )
     }  
   }
 }

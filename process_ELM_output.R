@@ -89,6 +89,7 @@ varconv         <- T    # covert variables using functions in var_conv list
 timeconv        <- T    # covert variables using functions in time_conv list, only implemented if varconv also TRUE (necessary?) 
 call_plot       <- T    # call plotting script  
 plot_only       <- F    # only call plotting or concatenation script if their switches are true, do not process data 
+png             <- F    # convert pdf plots into png images to reduce size
 concatenate_caseid <- F # concatenate RDS files for all runs in caseidprefix vector
 concatenate_uq     <- F # concatenate RDS files for all runs in a UQ ensemble 
 concatenate_daily  <- F # concatenate only RDS annual files 

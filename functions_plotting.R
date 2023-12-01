@@ -13,7 +13,7 @@ library(png)
 
 
 plot_3dim <- function(a3d=algtime, vvars=c('GPP','NPP','AR'), xdim='time', 
-                      vcol=NULL, leg_cols=4, print2screen=T, ... ) {
+                      vcol=NULL, leg_cols=3, print2screen=T, ... ) {
   lv <- length(vvars)
   lx <- dim(a3d)[xdim]
   if(is.null(vcol)) vcol <- viridis(lv)
@@ -25,7 +25,7 @@ plot_3dim <- function(a3d=algtime, vvars=c('GPP','NPP','AR'), xdim='time',
            scales=list(tck=c(-0.5,-0.5)),
            par.settings=simpleTheme(col=vcol,lwd=2),# lwd=2, lty = 1:3 ), 
            auto.key=list(lines=T, points=F, corner=c(0,1), x=0, y=1, 
-                         columns=leg_cols, border=T, cex=0.75, background='white' ),
+                         columns=leg_cols, border=T, cex=0.8, background='white' ),
            ... )
   
   if(print2screen) print(p1)
@@ -35,7 +35,7 @@ plot_3dim <- function(a3d=algtime, vvars=c('GPP','NPP','AR'), xdim='time',
 
 plot_stack <- function(a3d=algtime, vvars=c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
                        norm=F, xdim='time', ylabi, xlabi,
-                       vcol=NULL, leg_cols=4, print2screen=T, ... ) {
+                       vcol=NULL, print2screen=T, ... ) {
   lv <- length(vvars)
   lx <- dim(a3d)[xdim]
   if(is.null(vcol)) vcol <- viridis(lv)
@@ -54,7 +54,8 @@ plot_stack <- function(a3d=algtime, vvars=c('FATES_CROOT_ALLOC','FATES_FROOT_ALL
     geom_area() +
     ylab(ylabi) + 
     xlab(xlabi) + 
-    labs(fill='')
+    labs(fill='') +
+    theme(legend.position = "top")
   
   if(print2screen) print(p1)
   p1
@@ -67,7 +68,7 @@ plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR
                                div_sumvars=NULL,
                                div_prodvars=NULL,
                                div_zero=1e-2,
-                               xdim='time', vcol=NULL, leg_cols=4, print2screen=T,
+                               xdim='time', vcol=NULL, leg_cols=3, print2screen=T,
                                days=1, ... ) {
   
   lv <- length(vvars) + !is.null(sum_vars) 
@@ -113,7 +114,7 @@ plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR
            type='l', scales=list(tck=c(-0.5,-0.5)),
            par.settings=simpleTheme(col=vcol,lwd=2),# lty = 1:3 ), 
            auto.key=list(lines=T, points=F, corner=c(0,1), x=0, y=1,
-                         columns=leg_cols, border=T, cex=0.75, background='white' ),
+                         columns=leg_cols, border=T, cex=0.8, background='white' ),
            ... )
   
   if(print2screen) print(p1)
@@ -122,7 +123,7 @@ plot_3dim_combvars <- function(a3d=algtime, vvars=c('GPP'), sum_vars=c('NPP','AR
 
 
 plot_4dim <- function(a4d=alglgtime, vvars=c('H2OSOI'), xdim='time', zdim='levgrnd', dim_sub=NULL,
-                      vcol=NULL, leg_cols=4, print2screen=T, ... ) {
+                      vcol=NULL, leg_cols=3, print2screen=T, ... ) {
   lv <- length(vvars)
   lx <- dim(a4d)[xdim]
   lz <- if(is.null(dim_sub)) dim(a4d)[zdim] else length(dim_sub)
@@ -136,7 +137,7 @@ plot_4dim <- function(a4d=alglgtime, vvars=c('H2OSOI'), xdim='time', zdim='levgr
            scales=list(tck=c(-0.5,-0.5)),
            par.settings=simpleTheme(col=vcol,lwd=2),# lwd=2, lty = 1:3 ), 
            auto.key=list(lines=T, points=F, corner=c(0,1), x=0, y=1, 
-                         columns=leg_cols, border=T, cex=0.75, background='white' ),
+                         columns=leg_cols, border=T, cex=0.8, background='white' ),
            ... )
   
   if(print2screen) print(p1)
@@ -189,15 +190,16 @@ make_figures <- function(a3d, a4d, plotlist, xlab='Spin-up', timestep='year', pr
 
 
 plot_figures <- function(plots, plotname='plots.pdf', nper_page=3, png=F ) {
+  
   print('', quote=F )
-  if(png) plotname <- paste0(strsplit(plotname,'.')[[1]], '_png.pdf')
+  if(png) plotname <- paste0(strsplit(plotname,'\\.')[[1]][1], '_png.pdf')
   print(paste('Saving figures to:',plotname), quote=F )
  
   if(png) {
     plotlist_png(plots, plotname )
  
   } else { 
-    pdf(plotname, width=8.5, height=11 )
+    pdf(plotname, width=11, height=8.5 )
     lapply(1:length(plots), function(p) {
       print(plots[p], 
             split=c(1,p%%nper_page+if(p%%nper_page==0) nper_page else 0,1,nper_page), 
@@ -222,8 +224,9 @@ plotlist_png <- function(plotlist, fname='plotlist_png.pdf', ... ) {
   setwd('plots')
 
   # plot as png's
-  png('list-test%03d.png')
-  eval(plotlist)
+  png('list-test%03d.png', width=960, height=720 )
+  #eval(plotlist)
+  lapply(plotlist, print )
   dev.off()
 
   # read png's to list
@@ -231,7 +234,7 @@ plotlist_png <- function(plotlist, fname='plotlist_png.pdf', ... ) {
   
   # write png's to single pdf
   setwd('..')
-  pdf(fname)
+  pdf(fname, width=10, height=7 )
   par(mai=c(0,0,0,0))
   dummy <- lapply(plotlist_png, plotPNG )
   dev.off()
