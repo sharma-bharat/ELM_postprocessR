@@ -102,7 +102,7 @@ plotlist_nutrients <- list(
   ),
   p4 = list(
     #vvars = c('NUPTAKE','NNEED','NEFFLUX'),
-    vvars = c('FATES_NO3UPTAKE','FATES_NH4UPTAKE','FATES_NDEMAND','FATES_SYMNFIX','FATES_NEFFLUX'),
+    vvars = c('FATES_NO3UPTAKE','FATES_NH4UPTAKE','FATES_NDEMAND','FATES_NFIX_SYM','FATES_NEFFLUX'),
     ylab  = expression('N Flux [gN '*m^-2*' timestep'^-1*']')
   ),
   p5 = list(
