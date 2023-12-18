@@ -26,12 +26,12 @@ Please feel free to contribute by creating a newbranch that includes a username 
 ### dependencies ###
 
 netcdf4.0 libraries
-R packages: ncdf4 
+R packages: ncdf4, ggplot2, png, viridis 
 
 ### Run ###
 
-Use Rscript to run `functions_processing.R` and once that has been run, to run `functions_plotting.R`.
-Look inside each script to see command line arguments and how they are to be specified.  
+Use Rscript from the command line to run `functions_processing.R` and once that has been run, to run `functions_plotting.R`. The later can also be called from the former.
+Look inside each of the above scripts to see command line arguments and how they are to be specified.  
  
 
 
@@ -39,7 +39,7 @@ Look inside each script to see command line arguments and how they are to be spe
 
 ### Sponsorship ###
 
-We are grateful of the support from the U.S. Department of Energy (DOE) Office of Science, Biological and Environmental Research (BER). 
+We are grateful for the support from the U.S. Department of Energy (DOE) Office of Science, Biological and Environmental Research (BER). 
 
 ### Please direct questions to ###
 
