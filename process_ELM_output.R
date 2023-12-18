@@ -24,12 +24,12 @@ library(ncdf4)
 # any one of the below variables to line 77 or so can be specified as a command line argument by following the call to this script with a character string
 # each argument string (separated by a space) is parsed and interpreted individually as R code.
 
-#       Rscript run_MAAT.R "object1<-value1" "object2<-value2"
-#  e.g. Rscript run_MAAT.R "wd_mod_out<-'/home/alp/'" "zip<-T"
+#       Rscript process_ELM_output.R "object1<-value1" "object2<-value2"
+#  e.g. Rscript process_ELM_output.R "wd_mod_out<-'/home/alp/'" "zip<-T"
 #  OR from a calling script can be a single argument variable 
 #  e.g. ARGS="wd_mod_out<-'/home/alp/' zip<-T"
-#       Rscript run_MAAT.R $ARGS
-#       Rscript run_MAAT.R "$ARGS varconv<-F"
+#       Rscript process_ELM_output.R $ARGS
+#       Rscript process_ELM_output.R "$ARGS varconv<-F"
 
 
 # paths
@@ -89,6 +89,7 @@ varconv         <- T    # covert variables using functions in var_conv list
 timeconv        <- T    # covert variables using functions in time_conv list, only implemented if varconv also TRUE (necessary?) 
 call_plot       <- T    # call plotting script  
 plot_only       <- F    # only call plotting or concatenation script if their switches are true, do not process data 
+highfreq_plots  <- F    # plot high-frequency plots where sub-annual data available 
 png             <- F    # convert pdf plots into png images to reduce size
 concatenate_caseid <- F # concatenate RDS files for all runs in caseidprefix vector
 concatenate_uq     <- F # concatenate RDS files for all runs in a UQ ensemble 
@@ -119,10 +120,6 @@ source('functions_processing.R')
 #######################################
 wd_src <- getwd()
 
-print('',quote=F)
-print('Processing cases in model output directory:',quote=F)
-print(wd_mod_out,quote=F)
-
 # separate spins from transient
 spinss <- grepl('1850', cases )
 cases  <- breakout_cases(cases, spinss, case_labs ) 
@@ -136,6 +133,10 @@ nuq <- if(is.null(uq)) 1 else  uq
 
 
 if(!plot_only) {
+
+print('',quote=F)
+print('Processing cases in model output directory:',quote=F)
+print(wd_mod_out,quote=F)
 
 # caseidprefix loop 
 for(cid in 1:length(caseidprefix)) {

@@ -8,8 +8,11 @@
 ##############################
 
 # plotting lists
-# - each element in these plotlist lists result describe a separate figure when passed to the make_figures function 
+# - each element in these plotlist lists describe a separate figure when passed to the make_figures function 
+# - naming of each element in the highest level of the lists is arbitrary
+# - naming of the second level in the list is specific and is used for arguments in the functions in plotting_functions.R
 
+# list of base plots
 plotlist <- list(
   p0.1 = list(
     vvars = c('TBOT'),
@@ -28,22 +31,18 @@ plotlist <- list(
     ylab  = expression('Air specific huumidity ['*kg*kg^-1*']')
   ),
   p0 = list(
-    vvars = c('FATES_GPP','FATES_NPP','FATES_AUTORESP'),
+    vvars = c('FATES_GPP','FATES_NPP','FATES_AUTORESP','FATES_EXCESS_RESP'),
+    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
+  ),
+  p0.5 = list(
+    vvars = c('NEE'),
+    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
+  ),
+  p0.6 = list(
+    vvars = c('FATES_HET_RESP','FATES_MAINT_RESP','FATES_GROWTH_RESP','FATES_AUTORESP','FATES_EXCESS_RESP'),
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
   p1 = list(
-    vvars = c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
-    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
-  ),
-  p1.1 = list(
-    stackplot = T,
-    norm  = F, 
-    vvars = c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
-    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
-  ),
-  p1.2 = list(
-    stackplot = T,
-    norm  = T, 
     vvars = c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
@@ -51,7 +50,7 @@ plotlist <- list(
     vvars = c('FATES_STRUCTC','FATES_NONSTRUCTC','FATES_FROOTC','FATES_VEGC','FATES_VEGC_ABOVEGROUND','FATES_LEAFC','FATES_SAPWOODC','FATES_STOREC','FATES_REPROC'),
     ylab  = expression('Veg C Pool [gC '*m^-2*']')
   ),
-  p2.1 = list(
+  p2.3 = list(
     vvars = c('SOILC'),
     ylab  = expression('Soil C Pool [gC '*m^-2*']')
   ),
@@ -83,10 +82,35 @@ plotlist <- list(
   p9 = list(
     vvars = c('FATES_NCOHORTS','FATES_NPATCHES'),
     ylab  = 'FATES diagnostics [#]'
+  ),
+  p1.1 = list(
+    stackplot = T,
+    norm  = F, 
+    vvars = c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
+    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
+  ),
+  p1.2 = list(
+    stackplot = T,
+    norm  = T, 
+    vvars = c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
+    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
+  ),
+  p2.1 = list(
+    stackplot = T,
+    norm  = F, 
+    vvars = c('FATES_STRUCTC','FATES_FROOTC','FATES_LEAFC','FATES_SAPWOODC','FATES_STOREC','FATES_REPROC'),
+    ylab  = expression('Veg C Pool [gC '*m^-2*']')
+  ),
+  p2.2 = list(
+    stackplot = T,
+    norm  = T, 
+    vvars = c('FATES_STRUCTC','FATES_FROOTC','FATES_LEAFC','FATES_SAPWOODC','FATES_STOREC','FATES_REPROC'),
+    ylab  = expression('Veg C Pool [gC '*m^-2*']')
   )
 )
 
 
+# list of plots for nutrient-related variables
 plotlist_nutrients <- list(
   p1 = list(
     vvars = c('FATES_NONSTRUCTC','FATES_VEGC'),
@@ -128,9 +152,14 @@ plotlist_nutrients <- list(
 )
 
 
+# list of plots for physiology-related variables
 plotlist_phys <- list(
   p0 = list(
     vvars = c('FATES_GPP','FATES_AUTORESP'),
+    ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
+  ),
+  p0b = list(
+    vvars = c('FATES_MAINT_RESP','FATES_GROWTH_RESP','FATES_EXCESS_RESP'),
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
   p0a = list(
@@ -200,6 +229,178 @@ plotlist_phys <- list(
     v4d     = T,
     dim_sub = 3:10,
     ylab    = expression('Soil Water Potential, '*Psi*' [MPa]')
+  )
+)
+
+
+# list of plots differentiated by PFT 
+plotlist_pft <- list(
+  p1 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_VEGC_PF',
+    ylab  = expression('Veg C [gC '*m^-2*']')
+  ),
+  p1.1 = list(
+    stackplot = T,
+    norm  = T,
+    vvars = 'FATES_VEGC_PF',
+    ylab  = expression('Veg C proportion [-]')
+  ),
+  p2.1 = list(
+    stackplot = T,
+    norm  = T,
+    vvars = 'FATES_CANOPYCROWNAREA_PF',
+    ylab  = expression('Crown area proportion [-]')
+  ),
+  p3.1 = list(
+    stackplot = T,
+    norm  = T,
+    vvars = 'FATES_MORTALITY_PF',
+    ylab  = expression('Mortality individuals proportion [-]')
+  ),
+  p4.1 = list(
+    stackplot = T,
+    norm  = T,
+    vvars = 'FATES_MORTALITY_CFLUX_PF',
+    ylab  = expression('Mortality mass proportion [-]')
+  ),
+  p1.1 = list(
+    stackplot = T,
+    norm  = T,
+    vvars = 'FATES_NPP_PF',
+    ylab  = expression('NPP proportion [-]')
+  ),
+  p1.1 = list(
+    stackplot = T,
+    norm  = T,
+    vvars = 'FATES_RECRUITMENT_PF',
+    ylab  = expression('RECRUITMENT proportion [-]')
+  )
+)
+
+
+# list of plots differentiated by size-class 
+plotlist_size_class <- list(
+  p1 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_VEGC_ABOVEGROUND_SZ',
+    ylab  = expression('Veg C Aboveground [gC '*m^-2*']')
+  ),
+  p1a = list(
+    stackplot = T,
+    norm  = T,
+    vvars = 'FATES_VEGC_ABOVEGROUND_SZ',
+    ylab  = expression('Veg C Aboveground proportion [-]')
+  ),
+  p2 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_BASALAREA_SZ',
+    ylab  = expression('Basal Area ['*m^2*m^-2*']')
+  ),
+  p3 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_NPLANT_SZ',
+    ylab  = expression('Stand Density [# '*m^-2*']')
+  ),
+  p4 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_DDBH_CANOPY_SZ',
+    ylab  = expression('Canopy DBH growth [m '*m^-2*yr^-1*']')
+  ),
+  p5 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_DDBH_USTORY_SZ',
+    ylab  = expression('Understorey DBH growth [m '*m^-2*yr^-1*']')
+  ),
+  p6 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_LAI_CANOPY_SZ',
+    ylab  = expression('Canopy LAI ['*m^2*m^-2*']')
+  ),
+  p7 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_LAI_USTORY_SZ',
+    ylab  = expression('Understorey LAI ['*m^2*m^-2*']')
+  ),
+  p8 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_CANOPY_SZ',
+    ylab  = expression('Canopy Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p9 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_USTORY_SZ',
+    ylab  = expression('Understorey Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p10 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_BACKGROUND_SZ',
+    ylab  = expression('Background Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p11 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_TERMINATION_SZ',
+    ylab  = expression('Termination Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p12 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_IMPACT_SZ',
+    ylab  = expression('Impact Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p13 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_CSTARV_SZ',
+    ylab  = expression('C Starvation Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p14 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_HYDRAULIC_SZ',
+    ylab  = expression('Hydraulic Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p15 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_FIRE_SZ',
+    ylab  = expression('Fire Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p16 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_FREEZING_SZ',
+    ylab  = expression('Freeze Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p17 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_LOGGING_SZ',
+    ylab  = expression('Logging Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p18 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_SENESCENCE_SZ',
+    ylab  = expression('Senescence Mortality [# '*m^-2*yr^-1*']')
+  ),
+  p19 = list(
+    stackplot = T,
+    norm  = F,
+    vvars = 'FATES_MORTALITY_AGESCEN_SZ',
+    ylab  = expression('Age Senescence Mortality [# '*m^-2*yr^-1*']')
   )
 )
 
