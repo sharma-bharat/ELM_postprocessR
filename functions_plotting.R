@@ -175,10 +175,11 @@ plot_4dim <- function(a4d=alglgtime, vvars=c('H2OSOI'), xdim='time', zdim='levgr
 
 
 # check variables (vvars) exist in a 3D/4D array 
-check_vars(ar, vvars, vdim ) {
+check_vars <-  function(ar, vvars, vdim ) {
+  if(is.list(vvars)) vvars <- vvars[[1]]
   for(v in vvars) {
-    vexists <- v%in%dimnames(ar)[vdim]
-    if(!vexists) stop(paste('ERROR: variable does not exist in dataset:/n', v )) 
+    vexists <- v%in%dimnames(ar)[[vdim]]
+    if(!vexists) stop(paste('ERROR: variable does not exist in dataset:\n', v )) 
   }
 }
 
@@ -205,7 +206,8 @@ make_figures <- function(a3d, a4d, plotlist, xlab='Spin-up', timestep='year', pr
     }
    
     if(!is.null(l$stackplot)) {
-      check_vars(a3d, l$vvars, 3 )
+      ld <- length(dim(a3d))
+      check_vars(a3d, l$vvars, ld )
       plot_stack(a3d, vvars=l$vvars, norm=l$norm, ylabi=l$ylab, xlabi=paste(xlab,timestep), print2screen=print2screen, days=days, ... )
 
     } else if(is.null(l$v4d)) {

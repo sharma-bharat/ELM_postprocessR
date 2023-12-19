@@ -106,17 +106,17 @@ for(c in 1:length(case_labs)) {
   algsclstime <- l1$data_arrays$`lndgrid,fates_levscls,time`
   
   # plot required figures
-#  plots <- make_figures(algtime, plotlist=plotlist, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
-#  plot_figures(plots, paste0(fname,'.pdf'), png=png )
-#  
-#  plots <- make_figures(algtime, alglgtime, plotlist=plotlist_phys, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
-#  plot_figures(plots, paste0(fname,'_physiology','.pdf'), png=png )
+  plots <- make_figures(algtime, plotlist=plotlist, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
+  plot_figures(plots, paste0(fname,'.pdf'), png=png )
+  
+  plots <- make_figures(algtime, alglgtime, plotlist=plotlist_phys, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
+  plot_figures(plots, paste0(fname,'_physiology','.pdf'), png=png )
 
   if(grepl('NP',caseidprefix) | plot_nutrients) {
     print('',quote=F)
     print('PLOTTING NUTRIENTS')
-#    plots <- make_figures(algtime, plotlist=plotlist_nutrients, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
-#    plot_figures(plots, paste0(fname,'_nutrients','.pdf'), png=png )
+    plots <- make_figures(algtime, plotlist=plotlist_nutrients, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
+    plot_figures(plots, paste0(fname,'_nutrients','.pdf'), png=png )
   }  
   
   if(l1$dimensions['fates_levpft'] > 1) {
@@ -145,11 +145,7 @@ for(c in 1:length(case_labs)) {
   }  
   
   # extract & plot annual data
-  #fname_a <- paste0(fname,'_annual.RDS')
   if(file.exists(fname_a) & highfreq_plots) {
-    #l2 <- readRDS(fname_a) 
-    #algtime_annual   <- l2$data_arrays$`lndgrid,time`
-    #alglgtime_annual <- l2$data_arrays$`lndgrid,levgrnd,time`
     l2 <- readRDS(paste0(fname,'.RDS')) 
     algtime_highfreq   <- l2$data_arrays$`lndgrid,time`
     alglgtime_highfreq <- l2$data_arrays$`lndgrid,levgrnd,time`
