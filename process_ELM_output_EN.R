@@ -174,8 +174,13 @@ for(cid in 1:length(caseidprefix)) {
     print(sims,quote=F)
 
     # UQ loop
-    for(u in 1:nuq) {
-
+    #for(u in 1:nuq) {
+    # Bharat : the UQ for loop is time intensive, introducing uq_index to run Rscripts in parallel.
+    # Bharat: to parallelize the plotting function, `uq_index` should be passed via command line ...
+    # When nuq ==1, i.e., the
+    u <- if(nuq == 1) 1 else uq_index
+    if(u>=0){
+      # the above 'u' will replace former 'u' of the loop
       s <- 1
       # simulations loop
       # - sims simulations will end up in the same nc and RDS file
@@ -186,6 +191,8 @@ for(cid in 1:length(caseidprefix)) {
           } else {
             uq_member <- paste0('g',formatC(u,width=5,flag=0))
             paste(wd_mod_out,'UQ',sims[s],uq_member, sep='/' )
+            print ('Model Output at:')
+            print (paste(wd_mod_out,'UQ',sims[s],uq_member, sep='/' ))
           }
         setwd(wd_mod_out_sim)
 
@@ -193,10 +200,13 @@ for(cid in 1:length(caseidprefix)) {
         print('Processing case:',quote=F)
         print(sims[s],quote=F)
         if(!is.null(uq)) print(paste('  ','uq member:',uq_member), quote=F )
+        print (sims)
 
-        if(sims[s]==sims[1] | !is.null(uq)) {
+        #if(sims[s]==sims[1] | !is.null(uq)) {
+        if(sims[s]==sims[1]) { # Bharat: the line above is original; commenting the UQ part of the condition;
           print('',quote=F)
           print('Setting up new netcdf file ... ',quote=F)
+          print('Bharat >>>')
 
           fdate      <- paste0(formatC(syear_current[1], width=4, format="d", flag="0"), fstart_datetime )
           ifile      <- paste(sims[s],mod,paste0('h',hist),fdate,'nc',sep='.')
@@ -204,6 +214,9 @@ for(cid in 1:length(caseidprefix)) {
           vdims_list <- lapply(ncdf1$var, function(l) sapply(l$dim, function(l) l$name ) )
           vdims_len  <- lapply(ncdf1$var, function(l) sapply(l$dim, function(l) l$len ) )
           vars_units <- lapply(ncdf1$var, function(l) l$units )
+
+          print (fdate)
+          print (ifile)
 
           # redefine existing dimensions
           # - to include all output timesteps
@@ -469,7 +482,7 @@ for(cid in 1:length(caseidprefix)) {
 
 if(call_plot) {
   setwd(wd_src)
-  source('plot_ELM.R', local=T )
+  source('plot_ELM_EN.R', local=T )
 }
 
 
