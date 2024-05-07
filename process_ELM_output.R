@@ -3,7 +3,7 @@
 # Open ELM/CLM netcdf files, join, & put into lists of R arrays
 #
 # AWalker
-# April 2021
+# Updated by Bharat Sharma with ensemble postprocessing (May 2024)
 #
 ##############################
 
@@ -56,6 +56,8 @@ fstart_datetime <- '-01-01-00000'
 char_dims       <- 'string_length'
 # the number of members in a UQ ensemble, NULL means no ensemble
 uq_ensemblen    <- NULL
+# the id number member in a UQ ensemble, NULL means no ensemble
+uq_index    <- NULL
 
 # time variables
 # - syear, years, & tsteps vectors are the same extent as cases and elements correspond
@@ -173,9 +175,19 @@ for(cid in 1:length(caseidprefix)) {
     print('Processing (& concatenating) case(s):',quote=F)
     print(sims,quote=F)
 
-    # UQ loop
-    for(u in 1:nuq) {
+    # UQ Input arguments
+    # Ensemble Processing Update:
+    # Aim: to run the ensembles in parallel (compared to a for loop)
+    # Additional requirement: you need to pass additional arguments `uq_index` and `uq`...
+    # ... `uq_index` is the index/id of the ensemble run
+    # ... `uq` is the number of ensembles
+    u <- if(nuq == 1) 1 else uq_index
+    print(uq_index)
+    print('^ uq_index',quote=F)
 
+
+    if(u>=0){
+      # the above 'u' will replace former 'u' of the loop
       s <- 1
       # simulations loop
       # - sims simulations will end up in the same nc and RDS file
@@ -186,6 +198,8 @@ for(cid in 1:length(caseidprefix)) {
           } else {
             uq_member <- paste0('g',formatC(u,width=5,flag=0))
             paste(wd_mod_out,'UQ',sims[s],uq_member, sep='/' )
+            print ('Model Output at:')
+            print (paste(wd_mod_out,'UQ',sims[s],uq_member, sep='/' ))
           }
         setwd(wd_mod_out_sim)
 
@@ -193,8 +207,9 @@ for(cid in 1:length(caseidprefix)) {
         print('Processing case:',quote=F)
         print(sims[s],quote=F)
         if(!is.null(uq)) print(paste('  ','uq member:',uq_member), quote=F )
+        print (sims)
 
-        if(sims[s]==sims[1] | !is.null(uq)) {
+        if(sims[s]==sims[1]) {
           print('',quote=F)
           print('Setting up new netcdf file ... ',quote=F)
 
@@ -204,6 +219,9 @@ for(cid in 1:length(caseidprefix)) {
           vdims_list <- lapply(ncdf1$var, function(l) sapply(l$dim, function(l) l$name ) )
           vdims_len  <- lapply(ncdf1$var, function(l) sapply(l$dim, function(l) l$len ) )
           vars_units <- lapply(ncdf1$var, function(l) l$units )
+
+          print (fdate)
+          print (ifile)
 
           # redefine existing dimensions
           # - to include all output timesteps

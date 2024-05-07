@@ -3,7 +3,7 @@
 # Open ELM/CLM netcdf files, join, & put into lists of R arrays
 #
 # AWalker
-# April 2021
+# Updated by Bharat Sharma with ensemble postprocessing (May 2024)
 #
 ##############################
 
@@ -56,6 +56,8 @@ fstart_datetime <- '-01-01-00000'
 char_dims       <- 'string_length'
 # the number of members in a UQ ensemble, NULL means no ensemble
 uq_ensemblen    <- NULL
+# the id number member in a UQ ensemble, NULL means no ensemble
+uq_index    <- NULL
 
 # time variables
 # - syear, years, & tsteps vectors are the same extent as cases and elements correspond
@@ -173,12 +175,17 @@ for(cid in 1:length(caseidprefix)) {
     print('Processing (& concatenating) case(s):',quote=F)
     print(sims,quote=F)
 
-    # UQ loop
-    #for(u in 1:nuq) {
-    # Bharat : the UQ for loop is time intensive, introducing uq_index to run Rscripts in parallel.
-    # Bharat: to parallelize the plotting function, `uq_index` should be passed via command line ...
-    # When nuq ==1, i.e., the
+    # UQ Input arguments
+    # Ensemble Processing Update:
+    # Aim: to run the ensembles in parallel (compared to a for loop)
+    # Additional requirement: you need to pass additional arguments `uq_index` and `uq`...
+    # ... `uq_index` is the index/id of the ensemble run
+    # ... `uq` is the number of ensembles
     u <- if(nuq == 1) 1 else uq_index
+    print(uq_index)
+    print('^ uq_index',quote=F)
+
+
     if(u>=0){
       # the above 'u' will replace former 'u' of the loop
       s <- 1
@@ -202,11 +209,9 @@ for(cid in 1:length(caseidprefix)) {
         if(!is.null(uq)) print(paste('  ','uq member:',uq_member), quote=F )
         print (sims)
 
-        #if(sims[s]==sims[1] | !is.null(uq)) {
-        if(sims[s]==sims[1]) { # Bharat: the line above is original; commenting the UQ part of the condition;
+        if(sims[s]==sims[1]) {
           print('',quote=F)
           print('Setting up new netcdf file ... ',quote=F)
-          print('Bharat >>>')
 
           fdate      <- paste0(formatC(syear_current[1], width=4, format="d", flag="0"), fstart_datetime )
           ifile      <- paste(sims[s],mod,paste0('h',hist),fdate,'nc',sep='.')
@@ -482,7 +487,7 @@ for(cid in 1:length(caseidprefix)) {
 
 if(call_plot) {
   setwd(wd_src)
-  source('plot_ELM_EN.R', local=T )
+  source('plot_ELM.R', local=T )
 }
 
 

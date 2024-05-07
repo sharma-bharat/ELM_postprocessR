@@ -20,7 +20,6 @@ case_xlabs     <- c(spins='Spin-up', trans='Transient', aCO2='Ambient CO2', eCO2
 case_timestep  <- c(spins='year', trans='day', aCO2='day', eCO2='day' )
 plot_nutrients <- F
 
-
 print('',quote=F);print('',quote=F);print('',quote=F)
 
 if(exists('call_plot')) {
@@ -43,6 +42,8 @@ if(exists('call_plot')) {
   case_labs      <- c('spins', 'trans' )
   highfreq_plots <- F
 
+  # either NULL or an integer number of ensemble members
+  uq              <- NULL
 
   ##################################
   # parse command line arguments
@@ -58,9 +59,7 @@ if(exists('call_plot')) {
   }
 }
 
-print(paste('Plotting for ensemble index : ',uq_index,'/', nuq))
-# Bharat: Added a new command line argument uq_index to parallelize the
-# plotting function of plots.
+
 
 #######################################
 # Initialise
@@ -73,7 +72,11 @@ source('functions_plotting.R')
 # plotting lists
 source('info_plotting_fatesoutv2.R')
 
-
+nuq <- if(is.null(uq)) 1 else  uq
+# command line argument uq_index to parallelize the
+if(nuq>1){
+print(paste('Plotting for ensemble index : ',uq_index,'/', nuq))
+}
 
 #############################################
 # open RDS lists of arrays
@@ -89,28 +92,22 @@ if(is.null(wd_out_plots)) {
 print('  to figure directory:',quote=F)
 print(wd_out_plots,quote=F)
 
-print(case_labs)
-
-# Bharat: to parallelize the plotting function, `uq_index` should be passed via command line ...
-# if could range from 1 through nup (max ensemble)
-# if running not ensemble experiment
-# uq_index == 1 should work, needs to be checked
-if(uq_index >= 0 && uq_index <=nuq){
-u<-uq_index
+# to parallelize the plotting function, `uq_index` should be passed via command line ...
+u <- if(nuq == 1) 1 else uq_index
+print(nuq)
 
 for(c in 1:length(case_labs)) {
 
   fname   <- paste(caseidprefix,sites,case_labs[c],sep='_')
   fname_a <- paste0(fname,'_annual.RDS')
 
-  # overwriting the fname and fname_a if running ensembles
-  if(uq>1){
+  # overwriting the fname and fname_a if running UQ ensembles
+  if(nuq>1){
     fname   <- paste(caseidprefix,sites,case_labs[c],sep='_')
     uq_member <- paste0('g',formatC(u,width=5,flag=0))
     fname <-paste0(fname,'_',uq_member)
     fname_a<-paste0(fname,'_',uq_member,'_annual.RDS')
     }
-
 
   if(file.exists(fname_a)) {
     l1 <- readRDS(fname_a)
@@ -131,7 +128,7 @@ for(c in 1:length(case_labs)) {
   plots <- make_figures(algtime, alglgtime, plotlist=plotlist_phys, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
   plot_figures(plots, paste0(fname,'_physiology','.pdf'), png=png )
 
-  if(grepl('NP',caseidprefix) | plot_nutrients) {
+  if(grepl('NP|RD|ECA',caseidprefix) | plot_nutrients) {
     print('',quote=F)
     print('PLOTTING NUTRIENTS')
     plots <- make_figures(algtime, plotlist=plotlist_nutrients, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
@@ -175,14 +172,12 @@ for(c in 1:length(case_labs)) {
     plots <- make_figures(algtime, alglgtime_highfreq, plotlist=plotlist_phys, xlab=case_xlabs[case_labs[c]], timestep=case_timestep[case_labs[c]] )
     plot_figures(plots, paste0(fname,'_highfreq_physiology','.pdf'), png=png )
 
-    if(grepl('NP',caseidprefix) | plot_nutrients) {
+    if(grepl('NP|RD|ECA',caseidprefix) | plot_nutrients) {
       plots <- make_figures(algtime_highfreq, plotlist=plotlist_nutrients, xlab=case_xlabs[case_labs[c]], timestep='year' )
       plot_figures(plots, paste0(fname,'_highfreq_nutrients','.pdf'), png=png )
     }
   }
 }
-
-} # ending for if condition ensemble runs
 
 
 
