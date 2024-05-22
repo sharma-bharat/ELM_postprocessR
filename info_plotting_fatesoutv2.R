@@ -8,7 +8,7 @@
 ##############################
 
 # plotting lists
-# - each element in these plotlist lists describe a separate figure when passed to the make_figures function 
+# - each element in these plotlist lists describe a separate figure when passed to the make_figures function
 # - naming of each element in the highest level of the lists is arbitrary
 # - naming of the second level in the list is specific and is used for arguments in the functions in plotting_functions.R
 
@@ -41,6 +41,10 @@ plotlist <- list(
   p0.6 = list(
     vvars = c('FATES_HET_RESP','FATES_MAINT_RESP','FATES_GROWTH_RESP','FATES_AUTORESP','FATES_EXCESS_RESP'),
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
+  ),
+  p0.7 = list(
+    vvars = c('FATES_L2FR'),
+    ylab  = expression('leaf to fineroot biomass multiplier for target allometry ['*kg*kg^-1*']')
   ),
   p1 = list(
     vvars = c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
@@ -77,7 +81,7 @@ plotlist <- list(
   p8 = list(
     vvars = c('FATES_DISTURBANCE_RATE_FIRE','FATES_DISTURBANCE_RATE_LOGGING','FATES_DISTURBANCE_RATE_P2P','FATES_DISTURBANCE_RATE_P2S',
               'FATES_DISTURBANCE_RATE_POTENTIAL','FATES_DISTURBANCE_RATE_S2S','FATES_DISTURBANCE_RATE_TREEFALL'),
-    ylab  = 'Fraction of ground area disturbed [0-1]'  
+    ylab  = 'Fraction of ground area disturbed [0-1]'
   ),
   p9 = list(
     vvars = c('FATES_NCOHORTS','FATES_NPATCHES'),
@@ -85,25 +89,25 @@ plotlist <- list(
   ),
   p1.1 = list(
     stackplot = T,
-    norm  = F, 
+    norm  = F,
     vvars = c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
   p1.2 = list(
     stackplot = T,
-    norm  = T, 
+    norm  = T,
     vvars = c('FATES_CROOT_ALLOC','FATES_FROOT_ALLOC','FATES_LEAF_ALLOC','FATES_SEED_ALLOC','FATES_STEM_ALLOC','FATES_STORE_ALLOC'),
     ylab  = expression('C Flux [gC '*m^-2*' timestep'^-1*']')
   ),
   p2.1 = list(
     stackplot = T,
-    norm  = F, 
+    norm  = F,
     vvars = c('FATES_STRUCTC','FATES_FROOTC','FATES_LEAFC','FATES_SAPWOODC','FATES_STOREC','FATES_REPROC'),
     ylab  = expression('Veg C Pool [gC '*m^-2*']')
   ),
   p2.2 = list(
     stackplot = T,
-    norm  = T, 
+    norm  = T,
     vvars = c('FATES_STRUCTC','FATES_FROOTC','FATES_LEAFC','FATES_SAPWOODC','FATES_STOREC','FATES_REPROC'),
     ylab  = expression('Veg C Pool [gC '*m^-2*']')
   )
@@ -134,11 +138,11 @@ plotlist_nutrients <- list(
     ylab  = expression('P Flux [gP '*m^-2*' timestep'^-1*']')
   ),
   p6 = list(
-    vvars = c('GROSS_NMIN','NET_NMIN'), 
+    vvars = c('GROSS_NMIN','NET_NMIN'),
     ylab  = expression('N Flux [gN '*m^-2*' timestep'^-1*']')
   ),
   p7 = list(
-    vvars = c('BIOCHEM_PMIN','BIOCHEM_PMIN_TO_PLANT','GROSS_PMIN','NET_PMIN'), 
+    vvars = c('BIOCHEM_PMIN','BIOCHEM_PMIN_TO_PLANT','GROSS_PMIN','NET_PMIN'),
     ylab  = expression('P Flux [gP '*m^-2*' timestep'^-1*']')
   ),
   px = list(
@@ -148,6 +152,18 @@ plotlist_nutrients <- list(
   px.1 = list(
     vvars = c('FATES_STOREN','FATES_STOREP'),
     ylab  = expression('N/P Store [g '*m^-2*']')
+  ),
+  px.2 = list(
+    vvars = c('FATES_STOREN_TF','FATES_STOREP_TF'),
+    ylab  = expression('N/P Store Target [g '*m^-2*']')
+  ),
+  px.3 = list(
+    vvars = c('FATES_STOREC_TF','FATES_STOREN_TF','FATES_STOREP_TF'),
+    ylab  = expression('C/N/P Store Target [g '*m^-2*']')
+  ),
+  px.4 = list(
+    vvars = c('FATES_L2FR'),
+    ylab  = expression('leaf to fineroot biomass multiplier for target allometry ['*kg*kg^-1*']')
   )
 )
 
@@ -233,7 +249,7 @@ plotlist_phys <- list(
 )
 
 
-# list of plots differentiated by PFT 
+# list of plots differentiated by PFT
 plotlist_pft <- list(
   p1 = list(
     stackplot = T,
@@ -280,7 +296,7 @@ plotlist_pft <- list(
 )
 
 
-# list of plots differentiated by size-class 
+# list of plots differentiated by size-class
 plotlist_size_class <- list(
   p1 = list(
     stackplot = T,
