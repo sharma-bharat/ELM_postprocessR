@@ -284,11 +284,9 @@ plot_figures <- function(plots, plotname='plots.pdf', nper_page=2, png=F ) {
     plotlist_png(plots, plotname )
 
   } else {
-    print ("BS...>>>")
     print(plotname)
     print (length(plots))
     print(nper_page)
-    print ("BS...<<<")
     pdf(plotname, width=9, height=7 )
     lapply(1:length(plots), function(p) {
       print(plots[p],

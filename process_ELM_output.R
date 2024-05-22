@@ -3,6 +3,7 @@
 # Open ELM/CLM netcdf files, join, & put into lists of R arrays
 #
 # AWalker
+# April 2021
 # Updated by Bharat Sharma with ensemble postprocessing (May 2024)
 #
 ##############################
@@ -57,7 +58,7 @@ char_dims       <- 'string_length'
 # the number of members in a UQ ensemble, NULL means no ensemble
 uq_ensemblen    <- NULL
 # the id number member in a UQ ensemble, NULL means no ensemble
-uq_index    <- NULL
+uq_index        <- NULL
 
 # time variables
 # - syear, years, & tsteps vectors are the same extent as cases and elements correspond
@@ -82,17 +83,17 @@ fout_nyears     <- 1
 missval         <- 1.e36
 
 # switches
-sep_spin        <- T    # separate spin cases from transient ones, done automatically if tsteps are different
-zip             <- F    # zip concatenated netcdf
-vsub            <- NULL # subscripts (or a character vector) to put only those variables into new netcdf and RDS files
-yrzero          <- F    # ignore first year for spinups, currently automatic needs dev
-to_annual       <- T    # where tsteps > 1 also produce an annual RDS file
-varconv         <- T    # covert variables using functions in var_conv list
-timeconv        <- T    # covert variables using functions in time_conv list, only implemented if varconv also TRUE (necessary?)
-call_plot       <- T    # call plotting script
-plot_only       <- F    # only call plotting or concatenation script if their switches are true, do not process data
-highfreq_plots  <- F    # plot high-frequency plots where sub-annual data available
-png             <- F    # convert pdf plots into png images to reduce size
+sep_spin           <- T    # separate spin cases from transient ones, done automatically if tsteps are different
+zip                <- F    # zip concatenated netcdf
+vsub               <- NULL # subscripts (or a character vector) to put only those variables into new netcdf and RDS files
+yrzero             <- F    # ignore first year for spinups, currently automatic needs dev
+to_annual          <- T    # where tsteps > 1 also produce an annual RDS file
+varconv            <- T    # covert variables using functions in var_conv list
+timeconv           <- T    # covert variables using functions in time_conv list, only implemented if varconv also TRUE (necessary?)
+call_plot          <- T    # call plotting script
+plot_only          <- F    # only call plotting or concatenation script if their switches are true, do not process data
+highfreq_plots     <- F    # plot high-frequency plots where sub-annual data available
+png                <- F    # convert pdf plots into png images to reduce size
 concatenate_caseid <- F # concatenate RDS files for all runs in caseidprefix vector
 concatenate_uq     <- F # concatenate RDS files for all runs in a UQ ensemble
 concatenate_daily  <- F # concatenate only RDS annual files
@@ -179,11 +180,10 @@ for(cid in 1:length(caseidprefix)) {
     # Ensemble Processing Update:
     # Aim: to run the ensembles in parallel (compared to a for loop)
     # Additional requirement: you need to pass additional arguments `uq_index` and `uq`...
-    # ... `uq_index` is the index/id of the ensemble run
+    # ... `uq_index` is the index/id of the ensemble member
     # ... `uq` is the number of ensembles
     u <- if(nuq == 1) 1 else uq_index
-    print(uq_index)
-    print('^ uq_index',quote=F)
+    print (paste('uq_index:', uq_index),quote=F)
 
 
     if(u>=0){
@@ -284,14 +284,14 @@ for(cid in 1:length(caseidprefix)) {
         # - if not every year ELM/FATES will miss the final years of ouput if years_current does not divide exactly by fout_nyears
         if(names(years)[c]=='spins') {
           # the + read_final_year here means yr 1 is not read as for a spin that shows the initialisation values
-          read_final_year <- if(tsteps_current[s]==1) 1 else 0
-          year_range      <- syear_current[s]:years_current[s] + read_final_year
+          read_final_year   <- if(tsteps_current[s]==1) 1 else 0
+          year_range        <- syear_current[s]:years_current[s] + read_final_year
           #year_range <- seq(syear_current[s], years_current[s], fout_nyears )
           timecount_augment <- tcaug
         } else {
-          year_range      <- syear_current[s]:(syear_current[s] + years_current[s] - 1)
+          year_range        <- syear_current[s]:(syear_current[s] + years_current[s] - 1)
           #year_range <- seq(syear_current[s], (syear_current[s] + years_current[s] - 1), fout_nyears )
-          timecount_augment <- 0
+          timecount_augment  <- 0
         }
 
 

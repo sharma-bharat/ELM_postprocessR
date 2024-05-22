@@ -43,7 +43,7 @@ if(exists('call_plot')) {
   highfreq_plots <- F
 
   # either NULL or an integer number of ensemble members
-  uq              <- NULL
+  uq             <- NULL
 
   ##################################
   # parse command line arguments
@@ -75,7 +75,7 @@ source('info_plotting_fatesoutv2.R')
 nuq <- if(is.null(uq)) 1 else  uq
 # command line argument uq_index to parallelize the
 if(nuq>1){
-print(paste('Plotting for ensemble index : ',uq_index,'/', nuq))
+  print(paste('Plotting for ensemble index : ',uq_index,'/', nuq))
 }
 
 #############################################
@@ -103,14 +103,14 @@ for(c in 1:length(case_labs)) {
 
   # overwriting the fname and fname_a if running UQ ensembles
   if(nuq>1){
-    fname   <- paste(caseidprefix,sites,case_labs[c],sep='_')
+    fname     <- paste(caseidprefix,sites,case_labs[c],sep='_')
     uq_member <- paste0('g',formatC(u,width=5,flag=0))
-    fname <-paste0(fname,'_',uq_member)
-    fname_a<-paste0(fname,'_',uq_member,'_annual.RDS')
+    fname     <- paste0(fname,'_',uq_member)
+    fname_a   <- paste0(fname,'_',uq_member,'_annual.RDS')
     }
 
   if(file.exists(fname_a)) {
-    l1 <- readRDS(fname_a)
+    l1    <- readRDS(fname_a)
   } else {
     l1    <- readRDS(paste0(fname,'.RDS'))
   }
@@ -149,7 +149,7 @@ for(c in 1:length(case_labs)) {
     print('PLOTTING SIZE CLASS')
     scls <- l1$dim_variables$fates_levscls$vals
     for(i in 1:length(scls)) {
-      vc <-
+       vc <-
         if(i!=length(scls)) paste(scls[i],'-',scls[i+1],'cm')
         else paste('>',scls[i],'cm')
       vcl <- if(i==1) vc else c(vcl,vc)
